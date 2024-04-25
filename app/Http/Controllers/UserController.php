@@ -17,4 +17,23 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
     }
+
+    public function register(Request $request){
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'username' => 'required|unique:users',
+            'password' => 'required|min:6',
+        ]);
+
+        $user = new User([
+            'name' => $request->name,
+            'email'=> $request->email,
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+        ]);
+        $user->save();
+
+        return response()->json(['message' => 'User registered successfully'], 200);
+    }
 }
