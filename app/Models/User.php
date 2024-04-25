@@ -25,7 +25,7 @@ class User extends Authenticatable
         'password',
         'position',
         'phone',
-        'profile_picture'
+        'profile_picture',
     ];
 
     public function batoks(){
