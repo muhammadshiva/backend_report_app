@@ -90,7 +90,7 @@ class UserController extends Controller
         $isExist = User::where('email', $request->email)->exists();
 
         return response()->json(['is_email_exist' => $isExist]);
-
     }
+
 
 }
