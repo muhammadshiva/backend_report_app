@@ -29,4 +29,6 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
         return 'success';
     });
     Route::get('users', [UserController::class, 'show']);
+    Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
+
 });
