@@ -30,5 +30,6 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     });
     Route::get('users', [UserController::class, 'show']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
+    Route::put('users', [UserController::class, 'update']);
 
 });

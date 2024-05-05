@@ -33,4 +33,48 @@ class UserController extends Controller
         return response()->json(['data'=>$user], 200);
     }
 
+    public function update(Request $request){
+        try {
+            $user = User::find(auth()->user()->id);
+
+            $data = $request->only('name', 'username', 'email', 'password');
+
+            if($request->username != $user->username){
+                $isExistUsername = User::where('username', $request->username)->exists();
+
+                if($isExistUsername){
+                    return response()->json(['message' => 'Username already taken'], 409);
+                }
+            }
+
+            if($request->email != $user->email){
+                $isExistEmail = User::where('email', $request->email)->exists();
+
+                if($isExistEmail){
+                    return response()->json(['message' => 'Email already taken'], 409);
+                }
+            }
+
+            if($request->password){
+                $data['password'] = bcrypt($request->password);
+            }
+
+            if($request->profile_picture){
+                $profilePicture = uploadBase64Image($request->profile_picture);
+                $data['profile_picture'] = $profilePicture;
+
+                if($user->profile_picure){
+                    Storage::delete('public/'.$user->profile_picture);
+                }
+            }
+
+            $user->update($data);
+
+            return response()->json(['data' => $data], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
+
 }
