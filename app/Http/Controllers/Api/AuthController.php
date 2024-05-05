@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -56,15 +58,55 @@ class AuthController extends Controller
                 'profile_picture'=> $profilePicture,
             ]);
 
-            return response()->json(['data' => $user], 200);
-
             DB::commit();
+
+            $token = JWTAuth::attempt(['email' => $request->email, 'password' => $request->password]);
+
+            $userResponse = getUser($request->email);
+            $userResponse->token = $token;
+            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            $userResponse->token_type = 'bearer';
+
+            return response()->json(['data' => $userResponse], 200);
 
         } catch (\Throwable $th) {
             DB::rollback();
 
             return response()->json(['message' => $th->getMessage()], 500);
         }
+    }
+
+    public function login(Request $request){
+
+        $credentials = $request->only('email', 'password');
+
+        $validator = Validator::make($credentials, [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['errors' => $validator->messages()], 400);
+        }
+
+        try {
+            $token = JWTAuth::attempt($credentials);
+
+            if(!$token) {
+                return response()->json(['message' => 'Login credentials are invalid']);
+            }
+
+            $userResponse = getUser($request->email);
+            $userResponse->token = $token;
+            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            $userResponse->token_type = 'bearer';
+
+            return response()->json(['data' => $userResponse], 200);
+
+        } catch (\JWTException $th) {
+            return respose()->json(['message' => $th->getMessage()], 500);
+        }
+
     }
 
     private function uploadBase64Image($base64Image){
