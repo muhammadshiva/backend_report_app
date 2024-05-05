@@ -16,9 +16,11 @@ use App\Http\Controllers\Api\AuthController;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
+// NOTES
+// Route::middleware('jwt.verify')->get('test', function (Request $request) {
+//     return 'success';
 // });
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+
