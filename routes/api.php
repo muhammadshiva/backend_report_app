@@ -27,9 +27,16 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('is_email_exist', [UserController::class, 'isEmailExist']);
 
 Route::group(['middleware' => 'jwt.verify'], function ($router) {
+
+    // USER
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('users', [UserController::class, 'show']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
+
+    // BATOK
     Route::post('store/batok', [BatokController::class, 'store']);
+    Route::put('update/batok/{id}', [BatokController::class, 'update']);
+    Route::delete('delete/batok/{id}', [BatokController::class, 'delete']);
+    Route::get('batok', [BatokController::class, 'show']);
 });
