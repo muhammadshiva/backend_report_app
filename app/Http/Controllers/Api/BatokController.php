@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Models\Batok;
 
 class BatokController extends Controller
 {
@@ -33,7 +34,7 @@ class BatokController extends Controller
 
         try {
             $batok = Batok::create([
-                'user_id' => auth()->user()->id,
+                'id_user' => auth()->user()->id,
                 'tanggal' => $request->tanggal,
                 'sumber_batok' => $request->sumber_batok,
                 'barang_masuk' => $request->barang_masuk,
@@ -44,12 +45,27 @@ class BatokController extends Controller
             ]);
 
             DB::commit();
+
+            $response = [
+                'data' => [
+                    'id' => $batok->id,
+                    'id_user' => $batok->id_user,
+                    'tanggal' => $batok->tanggal,
+                    'sumber_batok' => $batok->sumber_batok,
+                    'barang_masuk' => $batok->barang_masuk,
+                    'barang_keluar' => $batok->barang_keluar,
+                    'stok_awal' => $batok->stok_awal,
+                    'stok_akhir' => $batok->stok_akhir,
+                    'keterangan' => $batok->keterangan,
+                    'updated_at' => $batok->updated_at,
+                    'created_at' => $batok->created_at,
+                ]
+            ];
+
+            return response()->json($response, 200);
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json(['message' => $th->getMessage()], 500);
-
         }
-
-
     }
 }
