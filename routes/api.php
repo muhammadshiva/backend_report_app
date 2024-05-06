@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BatokController;
 use App\Http\Controllers\Api\UserController;
 
 /*
@@ -30,4 +31,5 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     Route::get('users', [UserController::class, 'show']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
+    Route::post('store/batok', [BatokController::class, 'store']);
 });

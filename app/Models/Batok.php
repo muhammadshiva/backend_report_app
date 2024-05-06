@@ -11,7 +11,6 @@ class Batok extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id_user',
         'tanggal',
         'sumber_batok',
         'barang_masuk',
