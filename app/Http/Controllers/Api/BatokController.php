@@ -49,7 +49,6 @@ class BatokController extends Controller
             $response = [
                 'data' => [
                     'id' => $batok->id,
-                    'id_user' => $batok->id_user,
                     'tanggal' => $batok->tanggal,
                     'sumber_batok' => $batok->sumber_batok,
                     'barang_masuk' => $batok->barang_masuk,
@@ -147,18 +146,10 @@ class BatokController extends Controller
     }
 
     public function show() {
-        DB::beginTransaction();
-
         try {
-            $userId = auth()->user()->id;
-            $batok = Batok::where('id_user', $userId)->get();
-
-            DB::commit();
-
+            $batok = Batok::all();
             return response()->json(['data' => $batok], 200);
         } catch (\Throwable $th) {
-            DB::rollback();
-
             return response()->json(['message' => $th->getMessage()], 500);
         }
     }
