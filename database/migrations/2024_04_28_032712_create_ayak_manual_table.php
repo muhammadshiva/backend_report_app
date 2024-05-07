@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('ayak_manual', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
             $table->date('tanggal');
             $table->double('jumlah_batok');
             $table->double('jumlah_batok_mentah');

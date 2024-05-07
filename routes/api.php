@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BatokController;
+use App\Http\Controllers\Api\BahanBakuController;
 use App\Http\Controllers\Api\UserController;
 
 /*
@@ -39,4 +40,8 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     Route::put('update/batok/{id}', [BatokController::class, 'update']);
     Route::delete('delete/batok/{id}', [BatokController::class, 'delete']);
     Route::get('batok', [BatokController::class, 'show']);
+
+    // BAHAN BAKU
+    Route::post('store/bahan_baku', [BahanBakuController::class, 'store']);
+
 });

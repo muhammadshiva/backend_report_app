@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('oven', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
-            $table->foreignId('id_briket')->constrained('briket')->onDelete('cascade');
+            // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            // $table->foreignId('id_briket')->constrained('briket')->onDelete('cascade');
             $table->date('tanggal');
             $table->string('jenis_briket');
             $table->double('pendinginan_awal');

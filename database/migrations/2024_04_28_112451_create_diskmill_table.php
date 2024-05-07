@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('diskmill', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
             $table->date('tanggal');
             $table->double('batok_masuk');
             $table->double('hasil_pisau_02');

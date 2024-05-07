@@ -9,10 +9,13 @@ class Diskmill extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id_batok', 'tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
+    protected $fillable = ['tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
 
-    public function batok()
-    {
-        return $this->belongsTo(Batok::class, 'id_batok');
-    }
+    // BACKUP
+    // protected $fillable = ['id_batok', 'tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
+
+    // public function batok()
+    // {
+    //     return $this->belongsTo(Batok::class, 'id_batok');
+    // }
 }

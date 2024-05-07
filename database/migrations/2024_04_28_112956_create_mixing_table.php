@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('mixing', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
             $table->string('ukuran_pisau');
             $table->double('jumlah_arang');
             $table->double('jumlah_aci');

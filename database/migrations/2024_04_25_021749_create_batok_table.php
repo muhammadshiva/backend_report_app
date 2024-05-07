@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('batok', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_user')->constrained('users');
+            // $table->foreignId('id_user')->constrained('users');
             $table->date('tanggal');
             $table->string('sumber_batok');
             $table->double('barang_masuk');

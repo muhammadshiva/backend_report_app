@@ -13,7 +13,7 @@ class Batok extends Model
     protected $table = 'batok';
 
     protected $fillable = [
-        'id_user',
+        // 'id_user',
         'tanggal',
         'sumber_batok',
         'barang_masuk',
@@ -26,5 +26,4 @@ class Batok extends Model
     public function user(){
         return $this->belongsTo(User::class, 'id_user');
     }
-
 }
