@@ -9,6 +9,8 @@ class Diskmill extends Model
 {
     use HasFactory;
 
+    protected $table = 'diskmill';
+
     protected $fillable = ['tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
 
     // BACKUP

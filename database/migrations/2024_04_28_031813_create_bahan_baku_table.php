@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('bahan_baku');
             $table->double('jumlah_masuk');
             $table->double('jumlah_keluar');
-            $table->double('stok_awal');
-            $table->double('stok_akhir');
             $table->string('keterangan')->nullable();
             $table->timestamps();
         });

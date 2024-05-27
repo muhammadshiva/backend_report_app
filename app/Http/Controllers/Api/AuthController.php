@@ -64,7 +64,7 @@ class AuthController extends Controller
 
             $userResponse = getUser($request->email);
             $userResponse->token = $token;
-            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            // $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
             $userResponse->token_type = 'bearer';
 
             return response()->json(['data' => $userResponse], 200);
@@ -86,25 +86,32 @@ class AuthController extends Controller
         ]);
 
         if($validator->fails()){
-            return response()->json(['errors' => $validator->messages()], 400);
+            $statusCode = 400;
+            $message = 'Validation errors';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'errors' => $validator->messages()], $statusCode);
         }
 
         try {
             $token = JWTAuth::attempt($credentials);
 
             if(!$token) {
-                return response()->json(['message' => 'Login credentials are invalid']);
+                $statusCode = 401;
+                $message = 'Login credentials are invalid';
+                return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
             }
 
             $userResponse = getUser($request->email);
             $userResponse->token = $token;
-            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            // $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
             $userResponse->token_type = 'bearer';
 
-            return response()->json(['data' => $userResponse], 200);
-
+            $statusCode = 200;
+            $message = 'User logged in successfully';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $userResponse], $statusCode);
         } catch (\JWTException $th) {
-            return respose()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
 
     }
@@ -122,7 +129,6 @@ class AuthController extends Controller
 
     public function logout(){
         auth()->logout();
-
         return response()->json(['message' => 'Logout success'], 200);
     }
 

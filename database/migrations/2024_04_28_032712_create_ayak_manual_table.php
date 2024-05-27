@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
             $table->date('tanggal');
+            $table->string('sumber_batok');
             $table->double('jumlah_batok');
             $table->double('jumlah_batok_mentah');
             $table->double('jumlah_granul');

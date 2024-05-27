@@ -12,7 +12,7 @@ class BahanBaku extends Model
 
     protected $table = 'bahan_baku';
 
-    protected $fillable = ['tanggal', 'sumber_batok', 'bahan_baku', 'jumlah_masuk', 'jumlah_keluar', 'stok_awal', 'stok_akhir', 'keterangan'];
+    protected $fillable = ['tanggal', 'sumber_batok', 'bahan_baku', 'jumlah_masuk', 'jumlah_keluar', 'keterangan'];
 
     // protected $fillable = ['id_batok', 'tanggal', 'sumber_batok', 'bahan_baku', 'jumlah_masuk', 'jumlah_keluar', 'stok_awal', 'stok_akhir', 'keterangan'];
 

@@ -9,7 +9,9 @@ class Mixing extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];
+    protected $table = 'mixing';
+
+    protected $fillable = ['tanggal','ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];
 
     // BACKUP
     // protected $fillable = ['id_batok', 'ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];

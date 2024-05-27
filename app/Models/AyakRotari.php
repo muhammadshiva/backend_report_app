@@ -9,7 +9,9 @@ class AyakRotari extends Model
 {
     use HasFactory;
 
-    protected $fillable = [ 'batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
+    protected $table = 'ayak_rotari';
+
+    protected $fillable = ['tanggal','batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
 
     // protected $fillable = ['id_batok', 'batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
 

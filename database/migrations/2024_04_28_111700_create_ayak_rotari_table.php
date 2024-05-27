@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ayak_rotari', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            $table->string('sumber_batok');
             $table->double('batok_masuk');
             $table->double('batok_kotor');
             $table->double('hasil_batok');

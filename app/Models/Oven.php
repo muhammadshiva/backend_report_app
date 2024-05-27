@@ -9,7 +9,9 @@ class Oven extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id_batok', 'id_briket', 'tanggal', 'jenis_briket', 'pendinginan_awal', 'pendinginan_akhir', 'pengovenan_masuk', 'pengovenan_keluar', 'keterangan'];
+    protected $table = 'oven';
+
+    protected $fillable = ['tanggal', 'jenis_briket', 'pendinginan_awal', 'pendinginan_akhir', 'pengovenan_masuk', 'pengovenan_keluar', 'keterangan'];
 
     /// BACKUP
     // protected $fillable = ['id_batok', 'id_briket', 'tanggal', 'jenis_briket', 'pendinginan_awal', 'pendinginan_akhir', 'pengovenan_masuk', 'pengovenan_keluar', 'keterangan'];

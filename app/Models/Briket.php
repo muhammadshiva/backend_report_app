@@ -9,6 +9,8 @@ class Briket extends Model
 {
     use HasFactory;
 
+    protected $table = 'briket';
+
     protected $fillable = ['tanggal', 'jenis_briket', 'stok_awal', 'stok_akhir', 'keterangan'];
 
     // protected $fillable = ['id_batok', 'tanggal', 'jenis_briket', 'stok_awal', 'stok_akhir', 'keterangan'];
