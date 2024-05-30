@@ -13,6 +13,7 @@ class AyakManual extends Model
 
     protected $fillable = [
         'tanggal',
+        'sumber_batok',
         'jumlah_batok',
         'jumlah_batok_mentah',
         'jumlah_granul',

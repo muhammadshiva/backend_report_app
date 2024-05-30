@@ -14,10 +14,32 @@ class AyakManualController extends Controller
 {
     public function index() {
         try {
-            $ayakManuals = AyakManual::all();
-            return response()->json(['data' => $ayakManuals], 200);
+            $ayakManual = AyakManual::orderBy('sumber_batok')->orderBy('tanggal', 'desc')->get();
+            $groupedAyakManual = $ayakManual->groupBy('sumber_batok');
+            $response = [];
+
+            foreach($groupedAyakManual as $sumber => $listAyakManual){
+                $totalJumlahBatok = $listAyakManual->sum('jumlah_batok');
+                $totalJumlahBatokMentah = $listAyakManual->sum('jumlah_batok_mentah');
+                $totalJumlahGranul = $listAyakManual->sum('jumlah_granul');
+
+                $tanggalDitambahkan = $listAyakManual->first()->tanggal;
+
+                $response[] = [
+                    'sumber_batok' => $sumber,
+                    'tanggal' => $tanggalDitambahkan,
+                    'list_ayak_manual' => $listAyakManual,
+                ];
+
+            }
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
@@ -25,6 +47,7 @@ class AyakManualController extends Controller
     public function store(Request $request){
         $data = $request->only(
             'tanggal',
+            'sumber_batok',
             'jumlah_batok',
             'jumlah_batok_mentah',
             'jumlah_granul',
@@ -33,6 +56,7 @@ class AyakManualController extends Controller
 
         $validator = Validator::make($data, [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'jumlah_batok' => 'required|numeric',
             'jumlah_batok_mentah' => 'required|numeric',
             'jumlah_granul' => 'required|numeric',
@@ -48,6 +72,7 @@ class AyakManualController extends Controller
         try {
             $ayakManual = AyakManual::create([
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'jumlah_batok' => $request->jumlah_batok,
                 'jumlah_batok_mentah' => $request->jumlah_batok_mentah,
                 'jumlah_granul' => $request->jumlah_granul,
@@ -58,6 +83,7 @@ class AyakManualController extends Controller
 
             $response = [
                 'id' => $ayakManual->id,
+                'sumber_batok' => $request->sumber_batok,
                 'jumlah_batok' => $ayakManual->jumlah_batok,
                 'jumlah_batok_mentah' => $ayakManual->jumlah_batok_mentah,
                 'jumlah_granul' => $ayakManual->jumlah_granul,
