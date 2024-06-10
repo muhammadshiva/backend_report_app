@@ -13,30 +13,94 @@ use App\Models\Briket;
 class BriketController extends Controller
 {
 
-    public function index(){
+    public function index(Request $request){
         try {
-            $briket = Briket::all();
-            return response()->json(['data' => $briket], 200);
+            // Dapatkan parameter filter_by dari request
+            $filterBy = $request->query('filter_by');
 
+            // Tentukan tanggal berdasarkan filter
+            switch ($filterBy) {
+                case 'month':
+                    $startDate = Carbon::now()->subMonth();
+                    break;
+                case 'year':
+                    $startDate = Carbon::now()->subYear();
+                    break;
+                case 'week':
+                    $startDate = Carbon::now()->subWeek();
+                    break;
+                default:
+                    $startDate = null; // Menampilkan semua data jika tidak ada filter
+                    break;
+            }
+
+             // Ambil data briket berdasarkan tanggal yang difilter
+            $query = Briket::orderBy('sumber_batok')
+                    ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            $briket = $query->get();
+
+            if ($briket->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+            }
+
+            $tanggalDitambahkan = $briket->first()->tanggal;
+
+            // Menghitung jumlah briket masuk dan keluar langsung di query database
+            $jumlahBriketMasuk = $briket->where('jenis_masukan', 'Penambahan')->sum('stok');
+            $jumlahBriketKeluar = $briket->where('jenis_masukan', 'Pengurangan')->sum('stok');
+
+            $totalBriket = $jumlahBriketMasuk + $jumlahBriketKeluar;
+
+            if ($totalBriket > 0) {
+                $persentaseBriketMasuk = ($jumlahBriketMasuk / $totalBriket) * 100;
+                $persentaseBriketKeluar = ($jumlahBriketKeluar / $totalBriket) * 100;
+            } else {
+                $persentaseBriketMasuk = 0;
+                $persentaseBriketKeluar = 0;
+            }
+
+            $listPersentase = [
+                'persentase_briket_masuk' => $persentaseBriketMasuk,
+                'persentase_briket_keluar' => $persentaseBriketKeluar,
+            ];
+
+            $response[] = [
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
+                'list_persentase' => $listPersentase,
+                'list_briket' => $briket,
+            ];
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
     public function store(Request $request){
         $data = $request->only(
+            'jenis_masukan',
             'tanggal',
+            'sumber_batok',
             'jenis_briket',
-            'stok_awal',
-            'stok_akhir',
+            'stok',
             'keterangan'
         );
 
         $validator = Validator::make($data, [
+            'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
-            'stok_awal' => 'required|numeric',
-            'stok_akhir' => 'required|numeric',
+            'stok' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
@@ -48,31 +112,33 @@ class BriketController extends Controller
 
         try {
            $briket = Briket::create([
+                'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
-                'stok_awal' => $request->stok_awal,
-                'stok_akhir' => $request->stok_akhir,
+                'stok' => $request->stok,
                 'keterangan' => $request->keterangan
             ]);
 
             DB::commit();
 
             $response = [
-                'data' => [
-                    'id' => $briket->id,
-                    'tanggal' => $briket->tanggal,
-                    'jenis_briket' => $briket->jenis_briket,
-                    'stok_awal' => $briket->stok_awal,
-                    'stok_akhir' => $briket->stok_akhir,
-                    'keterangan' => $briket->keterangan
-                ]
+                'id' => $briket->id,
+                'jenis_masukan' => $briket->jenis_masukan,
+                'tanggal' => $briket->tanggal,
+                'sumber_batok' => $briket->sumber_batok,
+                'stok' => $briket->stok,
+                'keterangan' => $briket->keterangan
             ];
 
-            return response()->json(['data' => $response], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
@@ -84,12 +150,21 @@ class BriketController extends Controller
             return response()->json(['message' => 'Data not found'], 404);
         }
 
+        $data = $request->only(
+            'jenis_masukan',
+            'tanggal',
+            'sumber_batok',
+            'jenis_briket',
+            'stok',
+            'keterangan'
+        );
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($data, [
+            'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
-            'stok_awal' => 'required|numeric',
-            'stok_akhir' => 'required|numeric',
+            'stok' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
@@ -101,10 +176,11 @@ class BriketController extends Controller
 
         try {
            $briket->update([
+                'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
-                'stok_awal' => $request->stok_awal,
-                'stok_akhir' => $request->stok_akhir,
+                'stok' => $request->stok,
                 'keterangan' => $request->keterangan
             ]);
 
@@ -112,18 +188,22 @@ class BriketController extends Controller
 
             $response = [
                 'id' => $briket->id,
-                'tanggal' => $briket->tanggal,
-                'jenis_briket' => $briket->jenis_briket,
-                'stok_awal' => $briket->stok_awal,
-                'stok_akhir' => $briket->stok_akhir,
-                'keterangan' => $briket->keterangan
+                'jenis_masukan' => $request->jenis_masukan,
+                'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
+                'jenis_briket' => $request->jenis_briket,
+                'stok' => $request->stok,
+                'keterangan' => $request->keterangan
             ];
 
-            return response()->json(['data' => $response], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 

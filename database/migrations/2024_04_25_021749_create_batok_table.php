@@ -12,14 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('batok', function (Blueprint $table) {
-            $table->id();
             // $table->foreignId('id_user')->constrained('users');
+            $table->id();
+            $table->string('jenis_masukan');
             $table->date('tanggal');
             $table->string('sumber_batok');
-            $table->double('barang_masuk');
-            $table->double('barang_keluar');
-            $table->double('stok_awal');
-            $table->double('stok_akhir');
+            $table->double('jumlah_batok');
             $table->string('keterangan')->nullable();
             $table->timestamps();
         });

@@ -11,13 +11,6 @@ class AyakRotari extends Model
 
     protected $table = 'ayak_rotari';
 
-    protected $fillable = ['tanggal','batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
-
-    // protected $fillable = ['id_batok', 'batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
-
-    // public function batok()
-    // {
-    //     return $this->belongsTo(Batok::class, 'id_batok');
-    // }
+    protected $fillable = ['tanggal','sumber_batok','batok_masuk', 'batok_kotor', 'hasil_batok', 'hasil_abu', 'keterangan'];
 
 }

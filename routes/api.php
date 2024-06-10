@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\DiskmillController;
 use App\Http\Controllers\Api\MixingController;
 use App\Http\Controllers\Api\BriketController;
 use App\Http\Controllers\Api\OvenController;
-
+use App\Http\Controllers\Api\SumberBatokController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +43,10 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
 
+    // SUMBER BATOK
+    Route::get('sumber_batok', [SumberBatokController::class, 'index']);
+    Route::post('store/sumber_batok', [SumberBatokController::class, 'store']);
+
     // BATOK
     Route::get('batok', [BatokController::class, 'index']);
     Route::post('store/batok', [BatokController::class, 'store']);
@@ -61,42 +65,42 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     // AYAK MANUAL
     Route::get('ayak_manual', [AyakManualController::class, 'index']);
     Route::post('store/ayak_manual', [AyakManualController::class, 'store']);
-    Route::put('update/ayak_manual/{id}', [AyakManualController::class, 'update']);
+    Route::post('update/ayak_manual/{id}', [AyakManualController::class, 'update']);
     Route::delete('delete/ayak_manual/{id}', [AyakManualController::class, 'delete']);
     Route::get('ayak_manual/{id}', [AyakManualController::class, 'show']);
 
     // AYAK ROTARI
     Route::get('ayak_rotari', [AyakRotariController::class, 'index']);
     Route::post('store/ayak_rotari', [AyakRotariController::class, 'store']);
-    Route::put('update/ayak_rotari/{id}', [AyakRotariController::class, 'update']);
+    Route::post('update/ayak_rotari/{id}', [AyakRotariController::class, 'update']);
     Route::delete('delete/ayak_rotari/{id}', [AyakRotariController::class, 'delete']);
     Route::get('ayak_rotari/{id}', [AyakRotariController::class, 'show']);
 
     // DISKMILL
     Route::get('diskmill', [DiskmillController::class, 'index']);
     Route::post('store/diskmill', [DiskmillController::class, 'store']);
-    Route::put('update/diskmill/{id}', [DiskmillController::class, 'update']);
+    Route::post('update/diskmill/{id}', [DiskmillController::class, 'update']);
     Route::delete('delete/diskmill/{id}', [DiskmillController::class, 'delete']);
     Route::get('diskmill/{id}', [DiskmillController::class, 'show']);
 
     // MIXING
     Route::get('mixing', [MixingController::class, 'index']);
     Route::post('store/mixing', [MixingController::class, 'store']);
-    Route::put('update/mixing/{id}', [MixingController::class, 'update']);
+    Route::post('update/mixing/{id}', [MixingController::class, 'update']);
     Route::delete('delete/mixing/{id}', [MixingController::class, 'delete']);
     Route::get('mixing/{id}', [MixingController::class, 'show']);
 
     // OVEN
     Route::get('oven', [OvenController::class, 'index']);
     Route::post('store/oven', [OvenController::class, 'store']);
-    Route::put('update/oven/{id}', [OvenController::class, 'update']);
+    Route::post('update/oven/{id}', [OvenController::class, 'update']);
     Route::delete('delete/oven/{id}', [OvenController::class, 'delete']);
     Route::get('oven/{id}', [OvenController::class, 'show']);
 
     // BRIKET
     Route::get('briket', [BriketController::class, 'index']);
     Route::post('store/briket', [BriketController::class, 'store']);
-    Route::put('update/briket/{id}', [BriketController::class, 'update']);
+    Route::post('update/briket/{id}', [BriketController::class, 'update']);
     Route::delete('delete/briket/{id}', [BriketController::class, 'delete']);
     Route::get('briket/{id}', [BriketController::class, 'show']);
 });

@@ -11,12 +11,6 @@ class Briket extends Model
 
     protected $table = 'briket';
 
-    protected $fillable = ['tanggal', 'jenis_briket', 'stok_awal', 'stok_akhir', 'keterangan'];
-
-    // protected $fillable = ['id_batok', 'tanggal', 'jenis_briket', 'stok_awal', 'stok_akhir', 'keterangan'];
-
-    // public function batok(){
-    //     return $this->belongsTo(Batok::class, 'id_batok');
-    // }
+    protected $fillable = ['jenis_masukan','tanggal','sumber_batok','jenis_briket', 'stok', 'keterangan'];
 
 }

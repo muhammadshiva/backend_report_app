@@ -12,12 +12,12 @@ class BahanBaku extends Model
 
     protected $table = 'bahan_baku';
 
-    protected $fillable = ['tanggal', 'sumber_batok', 'bahan_baku', 'jumlah_masuk', 'jumlah_keluar', 'keterangan'];
-
-    // protected $fillable = ['id_batok', 'tanggal', 'sumber_batok', 'bahan_baku', 'jumlah_masuk', 'jumlah_keluar', 'stok_awal', 'stok_akhir', 'keterangan'];
-
-    // public function batok()
-    // {
-    //     return $this->belongsTo(Batok::class, 'id_batok');
-    // }
+    protected $fillable = [
+        'jenis_masukan',
+        'tanggal',
+        'sumber_batok',
+        'bahan_baku',
+        'jumlah',
+        'keterangan'
+    ];
 }

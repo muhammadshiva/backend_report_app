@@ -9,22 +9,75 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Mixing;
+use Carbon\Carbon;
+
 
 class MixingController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $mixing = Mixing::all();
-            return response()->json(['data' => $mixing], 200);
+            // Dapatkan parameter filter_by dari request
+            $filterBy = $request->query('filter_by');
 
+            // Tentukan tanggal berdasarkan filter
+            switch ($filterBy) {
+                case 'month':
+                    $startDate = Carbon::now()->subMonth();
+                    break;
+                case 'year':
+                    $startDate = Carbon::now()->subYear();
+                    break;
+                case 'week':
+                    $startDate = Carbon::now()->subWeek();
+                    break;
+                default:
+                    $startDate = null; // Menampilkan semua data jika tidak ada filter
+                    break;
+            }
+
+            // Ambil data bahan baku berdasarkan tanggal yang difilter
+            $query = Mixing::orderBy('sumber_batok')
+                        ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            $mixing = $query->get();
+
+            if ($mixing->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+            }
+
+            $totalArang = $mixing->sum('jumlah_arang');
+            $totalAci = $mixing->sum('jumlah_aci');
+            $totalCairan = $mixing->sum('jumlah_cairan');
+
+            $listTotalMixing = [
+                'total_arang' => $totalArang,
+                'total_aci' => $totalAci,
+                'total_cairan' => $totalCairan,
+            ];
+
+            $response[] = [
+                'list_total_mixing' => $listTotalMixing,
+                'list_mixing' => $mixing,
+            ];
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
     public function store(Request $request){
         $data = $request->only(
             'tanggal',
+            'sumber_batok',
             'ukuran_pisau',
             'jumlah_arang',
             'jumlah_aci',
@@ -34,6 +87,7 @@ class MixingController extends Controller
 
         $validator = Validator::make($data, [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'ukuran_pisau' => 'required|numeric',
             'jumlah_arang' => 'required|numeric',
             'jumlah_aci' => 'required|numeric',
@@ -50,6 +104,7 @@ class MixingController extends Controller
         try {
            $mixing = Mixing::create([
                 'tanggal' => $request->tanggal,
+                'sumber_batok'=> $request->sumber_batok,
                 'ukuran_pisau' => $request->ukuran_pisau,
                 'jumlah_arang' => $request->jumlah_arang,
                 'jumlah_aci' => $request->jumlah_aci,
@@ -62,6 +117,7 @@ class MixingController extends Controller
             $response = [
                 'id' => $mixing->id,
                 'tanggal' => $mixing->tanggal,
+                'sumber_batok' => $mixing->sumber_batok,
                 'ukuran_pisau' => $mixing->ukuran_pisau,
                 'jumlah_arang' => $mixing->jumlah_arang,
                 'jumlah_aci' => $mixing->jumlah_aci,
@@ -69,11 +125,14 @@ class MixingController extends Controller
                 'keterangan' => $mixing->keterangan
             ];
 
-            return response()->json(['data' => $response], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
@@ -82,6 +141,7 @@ class MixingController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'ukuran_pisau' => 'required|numeric',
             'jumlah_arang' => 'required|numeric',
             'jumlah_aci' => 'required|numeric',
@@ -98,6 +158,7 @@ class MixingController extends Controller
         try {
            $mixing->update([
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'ukuran_pisau' => $request->ukuran_pisau,
                 'jumlah_arang' => $request->jumlah_arang,
                 'jumlah_aci' => $request->jumlah_aci,
@@ -107,11 +168,14 @@ class MixingController extends Controller
 
             DB::commit();
 
-            return response()->json(['data' => $mixing], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $mixing], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 

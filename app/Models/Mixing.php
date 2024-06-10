@@ -11,14 +11,6 @@ class Mixing extends Model
 
     protected $table = 'mixing';
 
-    protected $fillable = ['tanggal','ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];
-
-    // BACKUP
-    // protected $fillable = ['id_batok', 'ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];
-
-    // public function batok()
-    // {
-    //     return $this->belongsTo(Batok::class, 'id_batok');
-    // }
+    protected $fillable = ['tanggal','sumber_batok','ukuran_pisau', 'jumlah_arang', 'jumlah_aci', 'jumlah_cairan', 'keterangan'];
 
 }

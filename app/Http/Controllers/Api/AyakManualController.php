@@ -9,29 +9,86 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\AyakManual;
+use Carbon\Carbon;
+
 
 class AyakManualController extends Controller
 {
-    public function index() {
+    public function index(Request $request) {
         try {
-            $ayakManual = AyakManual::orderBy('sumber_batok')->orderBy('tanggal', 'desc')->get();
-            $groupedAyakManual = $ayakManual->groupBy('sumber_batok');
-            $response = [];
+             // Dapatkan parameter filter_by dari request
+            $filter = $request->query('filter');
 
-            foreach($groupedAyakManual as $sumber => $listAyakManual){
-                $totalJumlahBatok = $listAyakManual->sum('jumlah_batok');
-                $totalJumlahBatokMentah = $listAyakManual->sum('jumlah_batok_mentah');
-                $totalJumlahGranul = $listAyakManual->sum('jumlah_granul');
+            $startDate = null;
+            $ayakManual = null;
 
-                $tanggalDitambahkan = $listAyakManual->first()->tanggal;
+            if ($filter) {
+                $filters = explode(',', $filter);
 
-                $response[] = [
-                    'sumber_batok' => $sumber,
-                    'tanggal' => $tanggalDitambahkan,
-                    'list_ayak_manual' => $listAyakManual,
-                ];
-
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $ayakManual = $f;
+                    }
+                }
             }
+             // Ambil data bahan baku berdasarkan tanggal yang difilter
+             $query = AyakManual::orderBy('sumber_batok')
+                           ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($ayakManual) {
+                $query->where('sumber_batok', 'LIKE', '%' . $ayakManual . '%');
+            }
+
+             $ayakManual = $query->get();
+
+            if ($ayakManual->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
+            }
+
+            $tanggalDitambahkan = $ayakManual->first()->tanggal;
+
+            $ayakManual->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => 'Batok',
+                        'jumlah' => $item->jumlah_batok,
+                    ],
+                    [
+                        'jenis_data' => 'Batok Mentah',
+                        'jumlah' => $item->jumlah_batok_mentah,
+                    ],
+                    [
+                        'jenis_data' => 'Granul',
+                        'jumlah' => $item->jumlah_granul,
+                    ],
+                ];
+                return $item;
+            });
+
+            $totalData = $ayakManual->count('jumlah');
+
+            $response = [
+                'total_data' => $totalData,
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
+                'list_ayak_manual' => $ayakManual,
+            ];
 
             $statusCode = 200;
             $message = 'Success';
@@ -90,88 +147,96 @@ class AyakManualController extends Controller
                 'keterangan' => $ayakManual->keterangan
             ];
 
-            return response()->json(['data' => $response], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
     public function update(Request $request, $id) {
-        // Temukan data AyakManual berdasarkan ID
-        $ayakManual = AyakManual::find($id);
+        $data = $request->only(
+            'tanggal',
+            'sumber_batok',
+            'jumlah_batok',
+            'jumlah_batok_mentah',
+            'jumlah_granul',
+            'keterangan'
+        );
 
-        // Jika data tidak ditemukan, kembalikan respons dengan status 404 (Not Found)
-        if (!$ayakManual) {
-            return response()->json(['message' => 'Data not found'], 404);
-        }
-
-        // Validasi data yang diterima dari permintaan
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($data, [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'jumlah_batok' => 'required|numeric',
             'jumlah_batok_mentah' => 'required|numeric',
             'jumlah_granul' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
-        // Jika validasi gagal, kembalikan pesan error
-        if ($validator->fails()) {
+        if($validator->fails()){
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
-        // Mulai transaksi database
         DB::beginTransaction();
 
         try {
-            // Perbarui data AyakManual
+            $ayakManual = AyakManual::findOrFail($id);
+
             $ayakManual->update([
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'jumlah_batok' => $request->jumlah_batok,
                 'jumlah_batok_mentah' => $request->jumlah_batok_mentah,
                 'jumlah_granul' => $request->jumlah_granul,
                 'keterangan' => $request->keterangan
             ]);
 
-            // Commit transaksi database
             DB::commit();
 
-            // Buat respons JSON dengan data yang diperbarui
-            return response()->json(['data' => $ayakManual], 200);
+            $response = [
+                'id' => $ayakManual->id,
+                'sumber_batok' => $request->sumber_batok,
+                'jumlah_batok' => $ayakManual->jumlah_batok,
+                'jumlah_batok_mentah' => $ayakManual->jumlah_batok_mentah,
+                'jumlah_granul' => $ayakManual->jumlah_granul,
+                'keterangan' => $ayakManual->keterangan
+            ];
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
+
         } catch (\Throwable $th) {
-            // Rollback transaksi jika terjadi kesalahan
             DB::rollback();
-            // Kembalikan pesan error
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
     public function delete($id) {
-        // Temukan data AyakManual berdasarkan ID
         $ayakManual = AyakManual::find($id);
 
-        // Jika data tidak ditemukan, kembalikan respons dengan status 404 (Not Found)
         if (!$ayakManual) {
             return response()->json(['message' => 'Data not found'], 404);
         }
 
-        // Mulai transaksi database
         DB::beginTransaction();
 
         try {
-            // Hapus data AyakManual
             $ayakManual->delete();
 
-            // Commit transaksi database
             DB::commit();
 
-            // Kembalikan respons sukses dengan status 200 (OK)
-            return response()->json(['message' => 'Data deleted successfully'], 200);
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
         } catch (\Throwable $th) {
-            // Rollback transaksi jika terjadi error
             DB::rollback();
-            // Kembalikan respons dengan status 500 (Internal Server Error) jika terjadi error
             return response()->json(['message' => $th->getMessage()], 500);
         }
     }

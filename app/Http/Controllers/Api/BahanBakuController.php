@@ -9,30 +9,149 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\BahanBaku;
+use App\Models\SumberBatok;
+use Carbon\Carbon;
+
 
 class BahanBakuController extends Controller
 {
-    public function index() {
+    public function index(Request $request) {
         try {
-            $bahanBaku =  BahanBaku::orderBy('sumber_batok')->orderBy('tanggal', 'desc')->get();
-            $groupedBahanBaku = $bahanBaku->groupBy('sumber_batok');
-            $response = [];
+            // Dapatkan parameter filter_by dari request
+            $filter = $request->query('filter');
 
-            foreach ($groupedBahanBaku as $sumber => $listBahanBaku){
-                $totalJumlahMasuk = $listBahanBaku->sum('jumlah_masuk');
-                $totalJumlahKeluar = $listBahanBaku->sum('jumlah_keluar');
+            $startDate = null;
+            $bahanBaku = null;
 
-                $persentaseBahanBaku =  $totalJumlahMasuk ? ($totalJumlahMasuk / $totalJumlahKeluar) * 100 : 0;
-                $tanggalDitambahkan = $listBahanBaku->first()->tanggal;
+            if ($filter) {
+                $filters = explode(',', $filter);
 
-                $response[] = [
-                    'sumber_batok' => $sumber,
-                    'persentase_bahan_baku' => $persentaseBahanBaku,
-                    'tanggal' => $tanggalDitambahkan,
-                    'list_bahan_baku' => $listBahanBaku,
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $bahanBaku = $f;
+                    }
+                }
+            }
+
+            // Ambil data bahan baku berdasarkan tanggal yang difilter
+            $query = BahanBaku::orderBy('sumber_batok')
+                          ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($bahanBaku) {
+                $query->where('bahan_baku', 'LIKE', '%' . $bahanBaku . '%');
+            }
+
+            $bahanBaku = $query->get();
+
+            if ($bahanBaku->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
+            }
+
+            $tanggalDitambahkan = $bahanBaku->first()->tanggal;
+
+            //* PERSENTASE ARANG
+            $jumlahArangMasuk = $bahanBaku->where('jenis_masukan', 'Penambahan')->where('bahan_baku', 'Stok Arang')->sum('jumlah');
+            $jumlahArangKeluar = $bahanBaku->where('jenis_masukan', 'Pengurangan')->where('bahan_baku', 'Stok Arang')->sum('jumlah');
+
+            $totalArang = $jumlahArangMasuk + $jumlahArangKeluar;
+
+            if ($totalArang > 0) {
+                $persentaseArangMasuk =  round(($jumlahArangMasuk / $totalArang) * 100, 2);
+                $persentaseArangKeluar =  round(($jumlahArangKeluar / $totalArang) * 100, 2);
+            } else {
+                $persentaseArangMasuk = 0;
+                $persentaseArangKeluar = 0;
+            }
+
+            //* PERSENTASE ACI
+            $jumlahAciMasuk = $bahanBaku->where('jenis_masukan', 'Penambahan')->where('bahan_baku', 'Stok Aci')->sum('jumlah');
+            $jumlahAciKeluar = $bahanBaku->where('jenis_masukan', 'Pengurangan')->where('bahan_baku', 'Stok Aci')->sum('jumlah');
+
+            $totalArang = $jumlahAciMasuk + $jumlahAciKeluar;
+
+            if ($totalArang > 0) {
+                $persentaseAciMasuk =  round(($jumlahAciMasuk / $totalArang) * 100, 2);
+                $persentaseAciKeluar =  round(($jumlahAciKeluar / $totalArang) * 100, 2);
+            } else {
+                $persentaseAciMasuk = 0;
+                $persentaseAciKeluar = 0;
+            }
+
+            //* PERSENTASE CAIRAN
+            $jumlahCairanMasuk = $bahanBaku->where('jenis_masukan', 'Penambahan')->where('bahan_baku', 'Stok Cairan')->sum('jumlah');
+            $jumlahCairanKeluar = $bahanBaku->where('jenis_masukan', 'Pengurangan')->where('bahan_baku', 'Stok Cairan')->sum('jumlah');
+
+            $totalArang = $jumlahCairanMasuk + $jumlahCairanKeluar;
+
+            if ($totalArang > 0) {
+                $persentaseCairanMasuk = round(($jumlahCairanMasuk / $totalArang) * 100, 2);
+                $persentaseCairanKeluar = round(($jumlahCairanKeluar / $totalArang) * 100, 2);
+            } else {
+                $persentaseCairanMasuk = 0;
+                $persentaseCairanKeluar = 0;
+            }
+
+            $totalData = $bahanBaku->count('jumlah');
+
+            // Tambahkan list_data ke setiap item batok
+            $bahanBaku->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => $item->jenis_masukan == 'Penambahan' ? 'Masuk' : 'Keluar',
+                        'jumlah' => $item->jumlah,
+                    ],
                 ];
+                return $item;
+            });
 
-             }
+            $listPersentase = [
+                [
+                    "jenis_persentase" => "Stok Aci",
+                    'persentase' => $persentaseAciMasuk,
+                ],
+                [
+                    "jenis_persentase" => "Stok Arang",
+                    'persentase' => $persentaseArangMasuk,
+                ],
+                [
+                    "jenis_persentase" => "Stok Cairan",
+                    'persentase' => $persentaseCairanMasuk,
+                ],
+                //* BACKUP
+                // 'persentase_arang_masuk' => $persentaseArangMasuk,
+                // 'persentase_arang_keluar' => $persentaseArangKeluar,
+                // 'persentase_aci_masuk' => $persentaseAciMasuk,
+                // 'persentase_aci_keluar' => $persentaseAciKeluar,
+                // 'persentase_cairan_masuk' => $persentaseCairanMasuk,
+                // 'persentase_cairan_keluar' => $persentaseCairanKeluar,
+            ];
+
+            $sumberBatokList = SumberBatok::get()->pluck('sumber_batok');
+
+            $response = [
+                'total_data' => $totalData,
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
+                'list_persentase' => $listPersentase,
+                'list_sumber_batok'=> $sumberBatokList,
+                'list_bahan_baku' => $bahanBaku,
+            ];
 
             $statusCode = 200;
             $message = 'Success';
@@ -46,19 +165,20 @@ class BahanBakuController extends Controller
 
     public function store(Request $request){
         $data = $request->only(
+            'jenis_masukan',
             'tanggal',
             'sumber_batok',
             'bahan_baku',
-            'jumlah_masuk',
-            'jumlah_keluar',
-            'keteragan');
+            'jumlah',
+            'keteragan'
+        );
 
         $validator = Validator::make($data, [
+            'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
             'sumber_batok' => 'required|string',
             'bahan_baku' => 'required|string',
-            'jumlah_masuk' => 'required|numeric',
-            'jumlah_keluar' => 'required|numeric',
+            'jumlah' => 'required|numeric',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -70,11 +190,11 @@ class BahanBakuController extends Controller
 
         try {
             $bahanBaku = BahanBaku::create([
+                'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
                 'sumber_batok' => $request->sumber_batok,
                 'bahan_baku' => $request->bahan_baku,
-                'jumlah_masuk' => $request->jumlah_masuk,
-                'jumlah_keluar' => $request->jumlah_keluar,
+                'jumlah' => $request->jumlah,
                 'keterangan' => $request->keterangan,
             ]);
 
@@ -85,8 +205,7 @@ class BahanBakuController extends Controller
                 'tanggal' => $bahanBaku->tanggal,
                 'sumber_batok' => $bahanBaku->sumber_batok,
                 'bahan_baku' => $bahanBaku->bahan_baku,
-                'jumlah_masuk' => $bahanBaku->jumlah_masuk,
-                'jumlah_keluar' => $bahanBaku->jumlah_keluar,
+                'jumlah' => $bahanBaku->jumlah,
                 'keterangan' => $bahanBaku->keterangan,
                 'updated_at' => $bahanBaku->updated_at,
                 'created_at' => $bahanBaku->created_at,
@@ -104,12 +223,20 @@ class BahanBakuController extends Controller
     }
 
     public function update(Request $request, $id) {
-        $validator = Validator::make($request->all(), [
+        $data = $request->only(
+            'jenis_masukan',
+            'tanggal',
+            'sumber_batok',
+            'bahan_baku',
+            'jumlah',
+            'keteragan');
+
+        $validator = Validator::make($data, [
+            'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
             'sumber_batok' => 'required|string',
             'bahan_baku' => 'required|string',
-            'jumlah_masuk' => 'required|numeric',
-            'jumlah_keluar' => 'required|numeric',
+            'jumlah' => 'required|numeric',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -123,11 +250,11 @@ class BahanBakuController extends Controller
             $bahanBaku = BahanBaku::findOrFail($id);
 
             $bahanBaku->update([
+                'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
                 'sumber_batok' => $request->sumber_batok,
                 'bahan_baku' => $request->bahan_baku,
-                'jumlah_masuk' => $request->jumlah_masuk,
-                'jumlah_keluar' => $request->jumlah_keluar,
+                'jumlah' => $request->jumlah,
                 'keterangan' => $request->keterangan,
             ]);
 
@@ -135,11 +262,11 @@ class BahanBakuController extends Controller
 
             $response = [
                 'id' => $bahanBaku->id,
+                'jenis_masukan' => $bahanBaku->jenis_masukan,
                 'tanggal' => $bahanBaku->tanggal,
                 'sumber_batok' => $bahanBaku->sumber_batok,
                 'bahan_baku' => $bahanBaku->bahan_baku,
-                'jumlah_masuk' => $bahanBaku->jumlah_masuk,
-                'jumlah_keluar' => $bahanBaku->jumlah_keluar,
+                'jumlah' => $bahanBaku->jumlah,
                 'keterangan' => $bahanBaku->keterangan,
                 'updated_at' => $bahanBaku->updated_at,
                 'created_at' => $bahanBaku->created_at,
@@ -170,7 +297,9 @@ class BahanBakuController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Data deleted successfully'], 200);
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json(['message' => $th->getMessage()], 500);

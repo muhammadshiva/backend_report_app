@@ -11,7 +11,7 @@ class Diskmill extends Model
 
     protected $table = 'diskmill';
 
-    protected $fillable = ['tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
+    protected $fillable = ['tanggal', 'sumber_batok', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];
 
     // BACKUP
     // protected $fillable = ['id_batok', 'tanggal', 'batok_masuk', 'hasil_pisau_02', 'hasil_pisau_03', 'keterangan'];

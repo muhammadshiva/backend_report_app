@@ -8,22 +8,60 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AyakRotari;
+use Carbon\Carbon;
 
 class AyakRotariController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $ayakRotari = AyakRotari::all();
-            return response()->json(['data' => $ayakRotari], 200);
+            // Dapatkan parameter filter_by dari request
+            $filterBy = $request->query('filter_by');
 
+            // Tentukan tanggal berdasarkan filter
+            switch ($filterBy) {
+                case 'month':
+                    $startDate = Carbon::now()->subMonth();
+                    break;
+                case 'year':
+                    $startDate = Carbon::now()->subYear();
+                    break;
+                case 'week':
+                    $startDate = Carbon::now()->subWeek();
+                    break;
+                default:
+                    $startDate = null; // Menampilkan semua data jika tidak ada filter
+                    break;
+            }
+
+            // Ambil data bahan baku berdasarkan tanggal yang difilter
+            $query = AyakRotari::orderBy('sumber_batok')
+                        ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            $ayakRotari = $query->get();
+
+            if ($ayakRotari->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+            }
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            DB::rollback();
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
     public function store(Request $request){
         $data = $request->only(
             'tanggal',
+            'sumber_batok',
             'batok_masuk',
             'batok_kotor',
             'hasil_batok',
@@ -33,6 +71,7 @@ class AyakRotariController extends Controller
 
         $validator = Validator::make($data, [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'batok_masuk' => 'required|numeric',
             'batok_kotor' => 'required|numeric',
             'hasil_batok' => 'required|numeric',
@@ -49,6 +88,7 @@ class AyakRotariController extends Controller
         try {
            $ayakRotari = AyakRotari::create([
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'batok_masuk' => $request->batok_masuk,
                 'batok_kotor' => $request->batok_kotor,
                 'hasil_batok' => $request->hasil_batok,
@@ -61,6 +101,7 @@ class AyakRotariController extends Controller
             $response = [
                 'id' => $ayakRotari->id,
                 'tanggal' => $ayakRotari->tanggal,
+                'sumber_batok' => $ayakRotari->sumber_batok,
                 'batok_masuk' => $ayakRotari->batok_masuk,
                 'batok_kotor' => $ayakRotari->batok_kotor,
                 'hasil_batok' => $ayakRotari->hasil_batok,
@@ -68,11 +109,14 @@ class AyakRotariController extends Controller
                 'keterangan' => $ayakRotari->keterangan
             ];
 
-            return response()->json(['data' => $response], 200);
-
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
@@ -85,6 +129,7 @@ class AyakRotariController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tanggal' => 'required|date',
+            'sumber_batok' => 'required|string',
             'batok_masuk' => 'required|numeric',
             'batok_kotor' => 'required|numeric',
             'hasil_batok' => 'required|numeric',
@@ -101,6 +146,7 @@ class AyakRotariController extends Controller
         try {
            $ayakRotari->update([
                 'tanggal' => $request->tanggal,
+                'sumber_batok' => $request->sumber_batok,
                 'batok_masuk' => $request->batok_masuk,
                 'batok_kotor' => $request->batok_kotor,
                 'hasil_batok' => $request->hasil_batok,
@@ -110,10 +156,14 @@ class AyakRotariController extends Controller
 
             DB::commit();
 
-            return response()->json(['data' =>$ayakRotari], 200);
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 

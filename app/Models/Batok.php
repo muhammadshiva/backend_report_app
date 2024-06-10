@@ -13,17 +13,11 @@ class Batok extends Model
     protected $table = 'batok';
 
     protected $fillable = [
-        // 'id_user',
+        'jenis_masukan',
         'tanggal',
         'sumber_batok',
-        'barang_masuk',
-        'barang_keluar',
-        'stok_awal',
-        'stok_akhir',
+        'jumlah_batok',
         'keterangan',
     ];
 
-    public function user(){
-        return $this->belongsTo(User::class, 'id_user');
-    }
 }
