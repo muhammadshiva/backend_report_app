@@ -16,41 +16,54 @@ class BriketController extends Controller
     public function index(Request $request){
         try {
             // Dapatkan parameter filter_by dari request
-            $filterBy = $request->query('filter_by');
+            $filter = $request->query('filter');
 
-            // Tentukan tanggal berdasarkan filter
-            switch ($filterBy) {
-                case 'month':
-                    $startDate = Carbon::now()->subMonth();
-                    break;
-                case 'year':
-                    $startDate = Carbon::now()->subYear();
-                    break;
-                case 'week':
-                    $startDate = Carbon::now()->subWeek();
-                    break;
-                default:
-                    $startDate = null; // Menampilkan semua data jika tidak ada filter
-                    break;
+            $startDate = null;
+            $briket = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $briket = $f;
+                    }
+                }
             }
 
-             // Ambil data briket berdasarkan tanggal yang difilter
+            // Ambil data bahan baku berdasarkan tanggal yang difilter
             $query = Briket::orderBy('sumber_batok')
-                    ->orderBy('tanggal', 'desc');
+                            ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
+            if ($briket) {
+                $query->where('jenis_briket', 'LIKE', '%' . $briket . '%');
+            }
+
             $briket = $query->get();
 
             if ($briket->isEmpty()) {
-                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
             }
 
             $tanggalDitambahkan = $briket->first()->tanggal;
 
-            // Menghitung jumlah briket masuk dan keluar langsung di query database
             $jumlahBriketMasuk = $briket->where('jenis_masukan', 'Penambahan')->sum('stok');
             $jumlahBriketKeluar = $briket->where('jenis_masukan', 'Pengurangan')->sum('stok');
 
@@ -64,12 +77,28 @@ class BriketController extends Controller
                 $persentaseBriketKeluar = 0;
             }
 
+            $totalData = $briket->count('sumber_batok');
+
+            $briket->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => 'Stok',
+                        'jumlah' => $item->stok,
+                    ],
+                ];
+                return $item;
+            });
+
+
             $listPersentase = [
-                'persentase_briket_masuk' => $persentaseBriketMasuk,
-                'persentase_briket_keluar' => $persentaseBriketKeluar,
+                [
+                    "jenis_persentase" => "Stok Briket",
+                    'persentase' => $persentaseBriketMasuk,
+                ],
             ];
 
-            $response[] = [
+            $response = [
+                'total_data' => $totalData,
                 'tanggal_ditambahkan' => $tanggalDitambahkan,
                 'list_persentase' => $listPersentase,
                 'list_briket' => $briket,
@@ -222,7 +251,9 @@ class BriketController extends Controller
 
              DB::commit();
 
-             return response()->json(['message' => 'Data deleted successfully'], 200);
+             $statusCode = 200;
+             $message = 'Success';
+             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);;
          } catch (\Throwable $th) {
              DB::rollback();
              return response()->json(['message' => $th->getMessage()], 500);
