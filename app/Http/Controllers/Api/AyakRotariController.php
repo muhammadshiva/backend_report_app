@@ -238,7 +238,9 @@ class AyakRotariController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Data deleted successfully'], 200);
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json(['message' => $th->getMessage()], 500);
