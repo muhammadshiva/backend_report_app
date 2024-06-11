@@ -15,42 +15,83 @@ class DiskmillController extends Controller
 {
     public function index(Request $request){
         try {
-             // Dapatkan parameter filter_by dari request
-             $filterBy = $request->query('filter_by');
+            $filter = $request->query('filter');
 
-             // Tentukan tanggal berdasarkan filter
-             switch ($filterBy) {
-                 case 'month':
-                     $startDate = Carbon::now()->subMonth();
-                     break;
-                 case 'year':
-                     $startDate = Carbon::now()->subYear();
-                     break;
-                 case 'week':
-                     $startDate = Carbon::now()->subWeek();
-                     break;
-                 default:
-                     $startDate = null; // Menampilkan semua data jika tidak ada filter
-                     break;
-             }
+            $startDate = null;
+            $diskmill = null;
 
-             // Ambil data bahan baku berdasarkan tanggal yang difilter
-             $query = Diskmill::orderBy('sumber_batok')
-                           ->orderBy('tanggal', 'desc');
+            if ($filter) {
+                $filters = explode(',', $filter);
 
-             if ($startDate) {
-                 $query->where('tanggal', '>=', $startDate);
-             }
-
-             $diskmill = $query->get();
-
-             if ($diskmill->isEmpty()) {
-                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $diskmill = $f;
+                    }
+                }
             }
+
+            // Ambil data bahan baku berdasarkan tanggal yang difilter
+            $query = Diskmill::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($diskmill) {
+                $query->where('sumber_batok', 'LIKE', '%' . $diskmill . '%');
+            }
+
+            $diskmill = $query->get();
+
+            if ($diskmill->isEmpty()) {
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
+            }
+
+            $tanggalDitambahkan = $diskmill->first()->tanggal;
+
+            $diskmill->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => 'Batok Masuk',
+                        'jumlah' => $item->batok_masuk,
+                    ],
+                    [
+                        'jenis_data' => 'Pisau 0.2',
+                        'jumlah' => $item->hasil_pisau_02,
+                    ],
+                    [
+                        'jenis_data' => 'Pisau 0.3',
+                        'jumlah' => $item->hasil_pisau_03,
+                    ],
+                ];
+                return $item;
+            });
+
+            $totalData = $diskmill->count('sumber_batok');
+
+            $response = [
+                'total_data' => $totalData,
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
+                'list_diskmill' => $diskmill,
+            ];
 
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $diskmill], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             $statusCode = 500;
             $message = 'Internal server error';
@@ -107,7 +148,7 @@ class DiskmillController extends Controller
 
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $diskmill], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
@@ -156,9 +197,19 @@ class DiskmillController extends Controller
 
             DB::commit();
 
+            $response = [
+                'id' => $diskmill->id,
+                'tanggal' => $diskmill->tanggal,
+                'sumber_batok' => $diskmill->sumber_batok,
+                'batok_masuk' => $diskmill->batok_masuk,
+                'hasil_pisau_02' => $diskmill->hasil_pisau_02,
+                'hasil_pisau_03' => $diskmill->hasil_pisau_03,
+                'keterangan' => $diskmill->keterangan,
+            ];
+
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $diskmill], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
@@ -181,7 +232,9 @@ class DiskmillController extends Controller
 
              DB::commit();
 
-             return response()->json(['message' => 'Data deleted successfully'], 200);
+             $statusCode = 200;
+             $message = 'Success';
+             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
          } catch (\Throwable $th) {
              DB::rollback();
              return response()->json(['message' => $th->getMessage()], 500);
