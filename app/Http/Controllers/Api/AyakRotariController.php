@@ -15,41 +15,87 @@ class AyakRotariController extends Controller
     public function index(Request $request){
         try {
             // Dapatkan parameter filter_by dari request
-            $filterBy = $request->query('filter_by');
+            $filter = $request->query('filter');
 
-            // Tentukan tanggal berdasarkan filter
-            switch ($filterBy) {
-                case 'month':
-                    $startDate = Carbon::now()->subMonth();
-                    break;
-                case 'year':
-                    $startDate = Carbon::now()->subYear();
-                    break;
-                case 'week':
-                    $startDate = Carbon::now()->subWeek();
-                    break;
-                default:
-                    $startDate = null; // Menampilkan semua data jika tidak ada filter
-                    break;
+            $startDate = null;
+            $ayakRotari = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $ayakRotari = $f;
+                    }
+                }
             }
 
             // Ambil data bahan baku berdasarkan tanggal yang difilter
             $query = AyakRotari::orderBy('sumber_batok')
-                        ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
+            if ($ayakRotari) {
+                $query->where('sumber_batok', 'LIKE', '%' . $ayakRotari . '%');
+            }
+
             $ayakRotari = $query->get();
 
             if ($ayakRotari->isEmpty()) {
-                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
             }
+
+            $tanggalDitambahkan = $ayakRotari->first()->tanggal;
+
+            $ayakRotari->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => 'Batok Masuk',
+                        'jumlah' => $item->batok_masuk,
+                    ],
+                    [
+                        'jenis_data' => 'Batok Kotor',
+                        'jumlah' => $item->batok_kotor,
+                    ],
+                    [
+                        'jenis_data' => 'Hasil Batok',
+                        'jumlah' => $item->hasil_batok,
+                    ],
+                    [
+                        'jenis_data' => 'Hasil Abu',
+                        'jumlah' => $item->hasil_batok,
+                    ],
+                ];
+                return $item;
+            });
+
+            $totalData = $ayakRotari->count('sumber_batok');
+
+            $response = [
+                'total_data' => $totalData,
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
+                'list_ayak_rotari' => $ayakRotari,
+            ];
 
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
@@ -111,7 +157,7 @@ class AyakRotariController extends Controller
 
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
@@ -156,9 +202,20 @@ class AyakRotariController extends Controller
 
             DB::commit();
 
+            $response = [
+                'id' => $ayakRotari->id,
+                'tanggal' => $ayakRotari->tanggal,
+                'sumber_batok' => $ayakRotari->sumber_batok,
+                'batok_masuk' => $ayakRotari->batok_masuk,
+                'batok_kotor' => $ayakRotari->batok_kotor,
+                'hasil_batok' => $ayakRotari->hasil_batok,
+                'hasil_abu' => $ayakRotari->hasil_abu,
+                'keterangan' => $ayakRotari->keterangan
+            ];
+
             $statusCode = 200;
             $message = 'Success';
-            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $ayakRotari], $statusCode);
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
