@@ -17,50 +17,81 @@ class MixingController extends Controller
     public function index(Request $request){
         try {
             // Dapatkan parameter filter_by dari request
-            $filterBy = $request->query('filter_by');
+            $filter = $request->query('filter');
 
-            // Tentukan tanggal berdasarkan filter
-            switch ($filterBy) {
-                case 'month':
-                    $startDate = Carbon::now()->subMonth();
-                    break;
-                case 'year':
-                    $startDate = Carbon::now()->subYear();
-                    break;
-                case 'week':
-                    $startDate = Carbon::now()->subWeek();
-                    break;
-                default:
-                    $startDate = null; // Menampilkan semua data jika tidak ada filter
-                    break;
+            $startDate = null;
+            $mixing = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $mixing = $f;
+                    }
+                }
             }
 
             // Ambil data bahan baku berdasarkan tanggal yang difilter
             $query = Mixing::orderBy('sumber_batok')
-                        ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
+            if ($mixing) {
+                $query->where('sumber_batok', 'LIKE', '%' . $mixing . '%');
+            }
+
             $mixing = $query->get();
 
             if ($mixing->isEmpty()) {
-                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => []], 200);
+                return response()->json(['status' => 200, 'message' => 'No data found', 'data' => new \stdClass()], 200);
             }
 
-            $totalArang = $mixing->sum('jumlah_arang');
-            $totalAci = $mixing->sum('jumlah_aci');
-            $totalCairan = $mixing->sum('jumlah_cairan');
+            $tanggalDitambahkan = $mixing->first()->tanggal;
 
-            $listTotalMixing = [
-                'total_arang' => $totalArang,
-                'total_aci' => $totalAci,
-                'total_cairan' => $totalCairan,
-            ];
+            $mixing->transform(function ($item) {
+                $item->list_data = [
+                    [
+                        'jenis_data' => 'Pisau',
+                        'jumlah' => $item->ukuran_pisau,
+                    ],
+                    [
+                        'jenis_data' => 'Arang',
+                        'jumlah' => $item->jumlah_arang,
+                    ],
+                    [
+                        'jenis_data' => 'Aci',
+                        'jumlah' => $item->jumlah_aci,
+                    ],
+                    [
+                        'jenis_data' => 'Cairan',
+                        'jumlah' => $item->jumlah_cairan,
+                    ],
+                ];
+                return $item;
+            });
 
-            $response[] = [
-                'list_total_mixing' => $listTotalMixing,
+            $totalData = $mixing->count('sumber_batok');
+
+            $response = [
+                'total_data' => $totalData,
+                'tanggal_ditambahkan' => $tanggalDitambahkan,
                 'list_mixing' => $mixing,
             ];
 
@@ -189,7 +220,9 @@ class MixingController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Data Batok berhasil dihapus'], 200);
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
 
