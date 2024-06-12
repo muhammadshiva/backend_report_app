@@ -132,4 +132,34 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logout success'], 200);
     }
 
+    public function fetchMenu() {
+        $tables = [
+            'batok',
+            'bahan_baku',
+            'ayak_manual',
+            'ayak_rotari',
+            'diskmill',
+            'mixing',
+            'oven',
+            'briket'
+        ];
+
+        $response = [];
+
+        foreach ($tables as $index => $table) {
+            $count = DB::table($table)->count('sumber_batok');
+            $latestDate = DB::table($table)->orderBy('tanggal', 'desc')->value('tanggal');
+
+            $response[] = [
+                'id' => $index + 1,
+                'title' => $table,
+                'date_created' => $latestDate,
+                'total' => $count
+            ];
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Success', 'data' => $response]);
+    }
+
+
 }

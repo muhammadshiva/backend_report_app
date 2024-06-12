@@ -38,6 +38,7 @@ Route::post('is_email_exist', [UserController::class, 'isEmailExist']);
 Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // USER
+    Route::get('main_menu', [AuthController::class, 'fetchMenu']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('users', [UserController::class, 'show']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
