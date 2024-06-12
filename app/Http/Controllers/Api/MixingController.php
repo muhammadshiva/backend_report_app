@@ -68,10 +68,6 @@ class MixingController extends Controller
             $mixing->transform(function ($item) {
                 $item->list_data = [
                     [
-                        'jenis_data' => 'Pisau',
-                        'jumlah' => $item->ukuran_pisau,
-                    ],
-                    [
                         'jenis_data' => 'Arang',
                         'jumlah' => $item->jumlah_arang,
                     ],
