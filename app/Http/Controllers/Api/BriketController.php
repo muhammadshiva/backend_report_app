@@ -54,7 +54,7 @@ class BriketController extends Controller
             }
 
             if ($briket) {
-                $query->where('jenis_briket', 'LIKE', '%' . $briket . '%');
+                $query->where('sumber_batok', 'LIKE', '%' . $briket . '%');
             }
 
             $briket = $query->get();
