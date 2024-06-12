@@ -52,7 +52,7 @@ class OvenController extends Controller
             }
 
             if ($oven) {
-                $query->where('jenis_briket', 'LIKE', '%' . $oven . '%');
+                $query->where('sumber_batok', 'LIKE', '%' . $oven . '%');
             }
 
             $oven = $query->get();
