@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Oven;
+use App\Exports\OvenExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class OvenController extends Controller
@@ -305,6 +307,71 @@ class OvenController extends Controller
             return response()->json(['message' => $th->getMessage()], 500);
         }
 
+    }
+
+    public function exportOvenData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = Oven::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $oven = $query->get();
+
+            $exportData = $oven->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'jenis_masukan' => $item->jenis_masukan,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'jenis_briket' => $item->jenis_briket,
+                    'pengovenan' => $item->pengovenan,
+                    'pendinginan' => $item->pendinginan,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new OvenExport($exportData), 'oven.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
     }
 
 }

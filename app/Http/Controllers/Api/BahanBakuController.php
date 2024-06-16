@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\BahanBaku;
 use App\Models\SumberBatok;
+use App\Exports\BahanBakuExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 
@@ -317,6 +319,69 @@ class BahanBakuController extends Controller
             return response()->json(['data' => $bahanBaku], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
+
+    public function exportBahanBakuData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = BahanBaku::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $bahanBaku = $query->get();
+
+            $exportData = $bahanBaku->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'jenis_masukan' => $item->jenis_masukan,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'jumlah_batok' => $item->jumlah,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new BahanBakuExport($exportData), 'bahan_baku.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 

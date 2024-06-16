@@ -50,6 +50,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // BATOK
     Route::get('batok', [BatokController::class, 'index']);
+    Route::get('batok/export', [BatokController::class, 'exportBatokData']);
     Route::post('store/batok', [BatokController::class, 'store']);
     Route::post('update/batok/{id}', [BatokController::class, 'update']);
     Route::delete('delete/batok/{id}', [BatokController::class, 'delete']);
@@ -58,6 +59,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // BAHAN BAKU
     Route::get('bahan_baku', [BahanBakuController::class, 'index']);
+    Route::get('bahan_baku/export', [BahanBakuController::class, 'exportBahanBakuData']);
     Route::post('store/bahan_baku', [BahanBakuController::class, 'store']);
     Route::post('update/bahan_baku/{id}', [BahanBakuController::class, 'update']);
     Route::delete('delete/bahan_baku/{id}', [BahanBakuController::class, 'delete']);
@@ -65,6 +67,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // AYAK MANUAL
     Route::get('ayak_manual', [AyakManualController::class, 'index']);
+    Route::get('ayak_manual/export', [AyakManualController::class, 'exportAyakManualData']);
     Route::post('store/ayak_manual', [AyakManualController::class, 'store']);
     Route::post('update/ayak_manual/{id}', [AyakManualController::class, 'update']);
     Route::delete('delete/ayak_manual/{id}', [AyakManualController::class, 'delete']);
@@ -72,6 +75,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // AYAK ROTARI
     Route::get('ayak_rotari', [AyakRotariController::class, 'index']);
+    Route::get('ayak_rotari/export', [AyakRotariController::class, 'exportAyakRotariData']);
     Route::post('store/ayak_rotari', [AyakRotariController::class, 'store']);
     Route::post('update/ayak_rotari/{id}', [AyakRotariController::class, 'update']);
     Route::delete('delete/ayak_rotari/{id}', [AyakRotariController::class, 'delete']);
@@ -79,6 +83,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // DISKMILL
     Route::get('diskmill', [DiskmillController::class, 'index']);
+    Route::get('diskmill/export', [DiskmillController::class, 'exportDiskmillData']);
     Route::post('store/diskmill', [DiskmillController::class, 'store']);
     Route::post('update/diskmill/{id}', [DiskmillController::class, 'update']);
     Route::delete('delete/diskmill/{id}', [DiskmillController::class, 'delete']);
@@ -86,6 +91,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // MIXING
     Route::get('mixing', [MixingController::class, 'index']);
+    Route::get('mixing/export', [MixingController::class, 'exportMixingData']);
     Route::post('store/mixing', [MixingController::class, 'store']);
     Route::post('update/mixing/{id}', [MixingController::class, 'update']);
     Route::delete('delete/mixing/{id}', [MixingController::class, 'delete']);
@@ -93,6 +99,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // OVEN
     Route::get('oven', [OvenController::class, 'index']);
+    Route::get('oven/export', [OvenController::class, 'exportOvenData']);
     Route::post('store/oven', [OvenController::class, 'store']);
     Route::post('update/oven/{id}', [OvenController::class, 'update']);
     Route::delete('delete/oven/{id}', [OvenController::class, 'delete']);
@@ -100,6 +107,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
 
     // BRIKET
     Route::get('briket', [BriketController::class, 'index']);
+    Route::get('briket/export', [BriketController::class, 'exportBriketData']);
     Route::post('store/briket', [BriketController::class, 'store']);
     Route::post('update/briket/{id}', [BriketController::class, 'update']);
     Route::delete('delete/briket/{id}', [BriketController::class, 'delete']);

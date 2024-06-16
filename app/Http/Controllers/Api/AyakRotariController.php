@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AyakRotari;
+use App\Exports\AyakRotariExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class AyakRotariController extends Controller
@@ -261,6 +263,71 @@ class AyakRotariController extends Controller
             return response()->json(['message' => $th->getMessage()], 500);
         }
 
+    }
+
+    public function exportAyakRotariData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = AyakRotari::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $ayakRotari = $query->get();
+
+            $exportData = $ayakRotari->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'batok_masuk' => $item->batok_masuk,
+                    'batok_kotor' => $item->batok_kotor,
+                    'hasil_batok' => $item->hasil_batok,
+                    'hasil_abu' => $item->hasil_abu,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new AyakRotariExport($exportData), 'ayak_rotari.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
     }
 
 }

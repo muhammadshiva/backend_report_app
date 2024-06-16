@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Diskmill;
+use App\Exports\DiskmillExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class DiskmillController extends Controller
@@ -256,4 +258,69 @@ class DiskmillController extends Controller
         }
 
     }
+
+    public function exportDiskmillData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = Diskmill::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $diskmill = $query->get();
+
+            $exportData = $diskmill->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'batok_masuk' => $item->batok_masuk,
+                    'hasil_pisau_02' => $item->hasil_pisau_02,
+                    'hasil_pisau_03' => $item->hasil_pisau_03,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new DiskmillExport($exportData), 'diskmill.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
+    }
+
 }

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\AyakManual;
+use App\Exports\AyakManualExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 
@@ -255,6 +257,70 @@ class AyakManualController extends Controller
             return response()->json(['message' => $th->getMessage()], 500);
         }
 
+    }
+
+    public function exportAyakManualData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = AyakManual::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $ayakManual = $query->get();
+
+            $exportData = $ayakManual->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'jumlah_batok' => $item->jumlah_batok,
+                    'jumlah_batok_mentah' => $item->jumlah_batok_mentah,
+                    'jumlah_granul' => $item->jumlah_granul,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new AyakManualExport($exportData), 'ayak_manual.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
     }
 
 }

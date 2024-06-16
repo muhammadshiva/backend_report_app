@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Briket;
+use App\Exports\BriketExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class BriketController extends Controller
@@ -275,6 +277,70 @@ class BriketController extends Controller
             return response()->json(['message' => $th->getMessage()], 500);
         }
 
+    }
+
+    public function exportBriketData(Request $request){
+        try {
+            // Dapatkan parameter filter dari request
+            $filter = $request->query('filter');
+
+            $startDate = null;
+            $sumberBatok = null;
+
+            if ($filter) {
+                $filters = explode(',', $filter);
+
+                // Parsing filters
+                foreach ($filters as $f) {
+                    if (in_array($f, ['month', 'year', 'week'])) {
+                        switch ($f) {
+                            case 'month':
+                                $startDate = Carbon::now()->subMonth();
+                                break;
+                            case 'year':
+                                $startDate = Carbon::now()->subYear();
+                                break;
+                            case 'week':
+                                $startDate = Carbon::now()->subWeek();
+                                break;
+                        }
+                    } else {
+                        $sumberBatok = $f;
+                    }
+                }
+            }
+
+            $query = Briket::orderBy('sumber_batok')
+            ->orderBy('tanggal', 'desc');
+
+            if ($startDate) {
+                $query->where('tanggal', '>=', $startDate);
+            }
+
+            if ($sumberBatok) {
+                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+            }
+
+            $briket = $query->get();
+
+            $exportData = $briket->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'jenis_masukan' => $item->jenis_masukan,
+                    'tanggal' => $item->tanggal,
+                    'sumber_batok' => $item->sumber_batok,
+                    'jenis_briket' => $item->jenis_briket,
+                    'stok' => $item->stok,
+                    'keterangan' => $item->keterangan,
+                ];
+            });
+
+            return Excel::download(new BriketExport($exportData), 'briket.xlsx');
+        } catch (\Throwable $th) {
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
     }
 
 }
