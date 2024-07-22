@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Diskmill;
 use App\Exports\DiskmillExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
 use Carbon\Carbon;
 
 class DiskmillController extends Controller

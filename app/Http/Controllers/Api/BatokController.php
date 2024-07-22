@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\Batok;
 use App\Models\SumberBatok;
 use App\Exports\BatokExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
 use Carbon\Carbon;
 
 class BatokController extends Controller

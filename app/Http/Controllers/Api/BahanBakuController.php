@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\BahanBaku;
 use App\Models\SumberBatok;
 use App\Exports\BahanBakuExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
 use Carbon\Carbon;
 
 
