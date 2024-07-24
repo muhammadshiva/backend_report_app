@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AyakRotari;
 use App\Exports\AyakRotariExport;
-use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class AyakRotariController extends Controller
