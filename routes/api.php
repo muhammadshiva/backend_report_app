@@ -41,6 +41,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     Route::get('main_menu', [AuthController::class, 'fetchMenu']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('users', [UserController::class, 'show']);
+    Route::get('users/all', [UserController::class, 'getAllUser']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
 
