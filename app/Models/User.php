@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Batok;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -30,7 +31,8 @@ class User extends Authenticatable implements JWTSubject
         'profile_picture',
     ];
 
-    public function batoks(){
+    public function batoks()
+    {
         return $this->hasMany(Batok::class);
     }
 
@@ -54,4 +56,15 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    /**
+     * Determine if the user can access the Filament panel.
+     *
+     * @param  Panel  $panel
+     * @return bool
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Sesuaikan logika akses panel Filament di sini
+        return str_ends_with($this->email, 'basindustries.com') && $this->hasVerifiedEmail();
+    }
 }

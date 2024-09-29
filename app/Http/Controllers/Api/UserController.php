@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-
+use stdClass;
 
 class UserController extends Controller
 {
@@ -56,7 +57,7 @@ class UserController extends Controller
         try {
             $user = User::find(auth()->user()->id);
 
-            $data = $request->only('name', 'username', 'email', 'password');
+            $data = $request->only('name', 'username', 'email', 'password', 'profile_picture', 'pin', 'phone', 'position');
 
             if ($request->username != $user->username) {
                 $isExistUsername = User::where('username', $request->username)->exists();
@@ -89,9 +90,16 @@ class UserController extends Controller
 
             $user->update($data);
 
-            return response()->json(['data' => $data], 200);
+            DB::commit();
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $user], $statusCode);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            DB::rollback();
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 
@@ -108,5 +116,29 @@ class UserController extends Controller
         $isExist = User::where('email', $request->email)->exists();
 
         return response()->json(['is_email_exist' => $isExist]);
+    }
+
+    public function deleteUser($id)
+    {
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $user->delete();
+
+            DB::commit();
+
+            $statusCode = 200;
+            $message = 'User deleted successfully';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
+        }
     }
 }

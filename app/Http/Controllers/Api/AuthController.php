@@ -24,6 +24,7 @@ class AuthController extends Controller
         // Validation process
         $validator = Validator::make($data, [
             'name' => 'required|string',
+            'username' => 'required|string',
             'email' => 'required|email',
             'password' => 'required|string|min:6',
             // 'pin'=> 'required|digits:6'
@@ -68,11 +69,15 @@ class AuthController extends Controller
             // $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
             $userResponse->token_type = 'bearer';
 
-            return response()->json(['data' => $userResponse], 200);
+            $statusCode = 200;
+            $message = 'User registered successfully';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $userResponse], $statusCode);
         } catch (\Throwable $th) {
             DB::rollback();
 
-            return response()->json(['message' => $th->getMessage()], 500);
+            $statusCode = 500;
+            $message = 'Internal server error';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
 

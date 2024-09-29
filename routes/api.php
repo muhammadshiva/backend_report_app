@@ -44,6 +44,7 @@ Route::group(['middleware' => 'jwt.verify'], function ($router) {
     Route::get('users/all', [UserController::class, 'getAllUser']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
+    Route::delete('/user/{id}', [UserController::class, 'deleteUser']);
 
     // SUMBER BATOK
     Route::get('sumber_batok', [SumberBatokController::class, 'index']);

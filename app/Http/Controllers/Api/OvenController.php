@@ -14,7 +14,8 @@ use Carbon\Carbon;
 
 class OvenController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         try {
             // Dapatkan parameter filter_by dari request
             $filter = $request->query('filter');
@@ -46,15 +47,15 @@ class OvenController extends Controller
             }
 
             // Ambil data bahan baku berdasarkan tanggal yang difilter
-            $query = Oven::orderBy('sumber_batok')
-                          ->orderBy('tanggal', 'desc');
+            $query = Oven::orderBy('jenis_masukan')
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
             if ($oven) {
-                $query->where('sumber_batok', 'LIKE', '%' . $oven . '%');
+                $query->where('jenis_masukan', 'LIKE', '%' . $oven . '%');
             }
 
             $oven = $query->get();
@@ -80,18 +81,18 @@ class OvenController extends Controller
             }
 
             //* PERSENTASE PENDINGINAN
-            $jumlahPendinginanMasuk = $oven->where('jenis_masukan', 'Penambahan')->sum('pendinginan');
-            $jumlahPendinginanKeluar = $oven->where('jenis_masukan', 'Pengurangan')->sum('pendinginan');
+            // $jumlahPendinginanMasuk = $oven->where('jenis_masukan', 'Penambahan')->sum('pendinginan');
+            // $jumlahPendinginanKeluar = $oven->where('jenis_masukan', 'Pengurangan')->sum('pendinginan');
 
-            $totalPendinginan = $jumlahPendinginanMasuk + $jumlahOvenKeluar;
+            // $totalPendinginan = $jumlahPendinginanMasuk + $jumlahOvenKeluar;
 
-            if ($totalPendinginan > 0) {
-                $persentasePendinginanMasuk = ($jumlahPendinginanMasuk / $totalPendinginan) * 100;
-                $persentasePendinginanKeluar = ($jumlahPendinginanKeluar / $totalPendinginan) * 100;
-            } else {
-                $persentasePendinginanMasuk = 0;
-                $persentasePendinginanKeluar = 0;
-            }
+            // if ($totalPendinginan > 0) {
+            //     $persentasePendinginanMasuk = ($jumlahPendinginanMasuk / $totalPendinginan) * 100;
+            //     $persentasePendinginanKeluar = ($jumlahPendinginanKeluar / $totalPendinginan) * 100;
+            // } else {
+            //     $persentasePendinginanMasuk = 0;
+            //     $persentasePendinginanKeluar = 0;
+            // }
 
             $totalData = $oven->count('jumlah');
 
@@ -102,10 +103,10 @@ class OvenController extends Controller
                         'jenis_data' => 'Pengovenan',
                         'jumlah' => $item->pengovenan,
                     ],
-                    [
-                        'jenis_data' => 'Pendinginan',
-                        'jumlah' => $item->pendinginan,
-                    ],
+                    // [
+                    //     'jenis_data' => 'Pendinginan',
+                    //     'jumlah' => $item->pendinginan,
+                    // ],
                 ];
                 return $item;
             });
@@ -116,10 +117,10 @@ class OvenController extends Controller
                     "jenis_persentase" => "Pengovenan",
                     'persentase' => $persentaseOvenMasuk,
                 ],
-                [
-                    "jenis_persentase" => "Pendinginan",
-                    'persentase' => $persentasePendinginanMasuk,
-                ],
+                // [
+                //     "jenis_persentase" => "Pendinginan",
+                //     'persentase' => $persentasePendinginanMasuk,
+                // ],
                 // 'persentase_oven_masuk' => $persentaseOvenMasuk,
                 // 'persentase_oven_keluar' => $persentaseOvenKeluar,
                 // 'persentase_pendinginan_masuk' => $persentasePendinginanMasuk,
@@ -144,41 +145,42 @@ class OvenController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $data = $request->only(
             "jenis_masukan",
             "tanggal",
-            "sumber_batok",
+            // "sumber_batok",
             "jenis_briket",
             "pengovenan",
-            "pendinginan",
+            // "pendinginan",
             "keterangan"
         );
 
         $validator = Validator::make($data, [
             'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
-            'sumber_batok' => 'required|string',
+            // 'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
             'pengovenan' => 'required|numeric',
-            'pendinginan' => 'required|numeric',
+            // 'pendinginan' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
         DB::beginTransaction();
 
         try {
-           $oven = Oven::create([
+            $oven = Oven::create([
                 'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
-                'sumber_batok' => $request->sumber_batok,
+                // 'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
                 'pengovenan' => $request->pengovenan,
-                'pendinginan' => $request->pendinginan,
+                // 'pendinginan' => $request->pendinginan,
                 'keterangan' => $request->keterangan
             ]);
 
@@ -188,47 +190,47 @@ class OvenController extends Controller
                 'id' => $oven->id,
                 'jenis_masukan' => $oven->jenis_masukan,
                 'tanggal' => $oven->tanggal,
-                'sumber_batok' => $oven->sumber_batok,
+                // 'sumber_batok' => $oven->sumber_batok,
                 'jenis_briket' => $oven->jenis_briket,
                 'pengovenan' => $oven->pengovenan,
-                'pendinginan' => $oven->pendinginan,
+                // 'pendinginan' => $oven->pendinginan,
                 'keterangan' => $oven->keterangan
             ];
 
             $statusCode = 200;
             $message = 'Success';
             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $response], $statusCode);
-
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json(['message' => $th->getMessage()], 500);
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $oven = Oven::find($id);
 
         $data = $request->only(
             "jenis_masukan",
             "tanggal",
-            "sumber_batok",
+            // "sumber_batok",
             "jenis_briket",
             "pengovenan",
-            "pendinginan",
+            // "pendinginan",
             "keterangan"
         );
 
         $validator = Validator::make($data, [
             'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
-            'sumber_batok' => 'required|string',
+            // 'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
             'pengovenan' => 'required|numeric',
-            'pendinginan' => 'required|numeric',
+            // 'pendinginan' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
@@ -238,10 +240,10 @@ class OvenController extends Controller
             $oven->update([
                 'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
-                'sumber_batok' => $request->sumber_batok,
+                // 'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
                 'pengovenan' => $request->pengovenan,
-                'pendinginan' => $request->pendinginan,
+                // 'pendinginan' => $request->pendinginan,
                 'keterangan' => $request->keterangan
             ]);
 
@@ -251,17 +253,16 @@ class OvenController extends Controller
                 'id' => $oven->id,
                 'jenis_masukan' => $oven->jenis_masukan,
                 'tanggal' => $oven->tanggal,
-                'sumber_batok' => $oven->sumber_batok,
+                // 'sumber_batok' => $oven->sumber_batok,
                 'jenis_briket' => $oven->jenis_briket,
                 'pengovenan' => $oven->pengovenan,
-                'pendinginan' => $oven->pendinginan,
+                // 'pendinginan' => $oven->pendinginan,
                 'keterangan' => $oven->keterangan
             ];
 
             $statusCode = 200;
             $message = 'Success';
             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $oven], $statusCode);
-
         } catch (\Throwable $th) {
             DB::rollback();
             $statusCode = 500;
@@ -270,46 +271,48 @@ class OvenController extends Controller
         }
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $oven = Oven::find($id);
 
-         if (!$oven) {
-             return response()->json(['message' => 'Data not found'], 404);
-         }
+        if (!$oven) {
+            return response()->json(['message' => 'Data not found'], 404);
+        }
 
-         DB::beginTransaction();
-
-         try {
-            $oven->delete();
-
-             DB::commit();
-
-             $statusCode = 200;
-             $message = 'Success';
-             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
-         } catch (\Throwable $th) {
-             DB::rollback();
-             return response()->json(['message' => $th->getMessage()], 500);
-         }
-    }
-
-    public function show($id) {
+        DB::beginTransaction();
 
         try {
-           $oven = Oven::find($id);
+            $oven->delete();
+
+            DB::commit();
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+
+        try {
+            $oven = Oven::find($id);
 
             if (!$oven) {
                 return response()->json(['message' => 'Data not found'], 404);
             }
 
-            return response()->json(['data' =>$oven], 200);
+            return response()->json(['data' => $oven], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()], 500);
         }
-
     }
 
-    public function exportOvenData(Request $request){
+    public function exportOvenData(Request $request)
+    {
         try {
             // Dapatkan parameter filter dari request
             $filter = $request->query('filter');
@@ -340,15 +343,15 @@ class OvenController extends Controller
                 }
             }
 
-            $query = Oven::orderBy('sumber_batok')
-            ->orderBy('tanggal', 'desc');
+            $query = Oven::orderBy('jenis_masukan')
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
             if ($sumberBatok) {
-                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+                $query->where('jenis_masukan', 'LIKE', '%' . $sumberBatok . '%');
             }
 
             $oven = $query->get();
@@ -358,10 +361,10 @@ class OvenController extends Controller
                     'id' => $item->id,
                     'jenis_masukan' => $item->jenis_masukan,
                     'tanggal' => $item->tanggal,
-                    'sumber_batok' => $item->sumber_batok,
+                    // 'sumber_batok' => $item->sumber_batok,
                     'jenis_briket' => $item->jenis_briket,
                     'pengovenan' => $item->pengovenan,
-                    'pendinginan' => $item->pendinginan,
+                    // 'pendinginan' => $item->pendinginan,
                     'keterangan' => $item->keterangan,
                 ];
             });
@@ -373,5 +376,4 @@ class OvenController extends Controller
             return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
-
 }

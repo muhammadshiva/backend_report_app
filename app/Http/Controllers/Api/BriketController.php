@@ -16,7 +16,8 @@ use Carbon\Carbon;
 class BriketController extends Controller
 {
 
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         try {
             // Dapatkan parameter filter_by dari request
             $filter = $request->query('filter');
@@ -48,15 +49,15 @@ class BriketController extends Controller
             }
 
             // Ambil data bahan baku berdasarkan tanggal yang difilter
-            $query = Briket::orderBy('sumber_batok')
-                            ->orderBy('tanggal', 'desc');
+            $query = Briket::orderBy('jenis_briket')
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
             if ($briket) {
-                $query->where('sumber_batok', 'LIKE', '%' . $briket . '%');
+                $query->where('jenis_briket', 'LIKE', '%' . $briket . '%');
             }
 
             $briket = $query->get();
@@ -80,7 +81,7 @@ class BriketController extends Controller
                 $persentaseBriketKeluar = 0;
             }
 
-            $totalData = $briket->count('sumber_batok');
+            $totalData = $briket->count('jenis_briket');
 
             $briket->transform(function ($item) {
                 $item->list_data = [
@@ -96,7 +97,7 @@ class BriketController extends Controller
             $listPersentase = [
                 [
                     "jenis_persentase" => "Stok Briket",
-                    'persentase' => $persentaseBriketMasuk,
+                    'persentase' => $jumlahBriketMasuk,
                 ],
             ];
 
@@ -117,11 +118,12 @@ class BriketController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $data = $request->only(
             'jenis_masukan',
             'tanggal',
-            'sumber_batok',
+            // 'sumber_batok',
             'jenis_briket',
             'stok',
             'keterangan'
@@ -130,23 +132,23 @@ class BriketController extends Controller
         $validator = Validator::make($data, [
             'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
-            'sumber_batok' => 'required|string',
+            // 'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
             'stok' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
         DB::beginTransaction();
 
         try {
-           $briket = Briket::create([
+            $briket = Briket::create([
                 'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
-                'sumber_batok' => $request->sumber_batok,
+                // 'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
                 'stok' => $request->stok,
                 'keterangan' => $request->keterangan
@@ -158,7 +160,7 @@ class BriketController extends Controller
                 'id' => $briket->id,
                 'jenis_masukan' => $briket->jenis_masukan,
                 'tanggal' => $briket->tanggal,
-                'sumber_batok' => $briket->sumber_batok,
+                // 'sumber_batok' => $briket->sumber_batok,
                 'stok' => $briket->stok,
                 'keterangan' => $briket->keterangan
             ];
@@ -174,7 +176,8 @@ class BriketController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $briket = Briket::find($id);
 
         // Jika data tidak ditemukan, kembalikan respons dengan status 404 (Not Found)
@@ -185,7 +188,7 @@ class BriketController extends Controller
         $data = $request->only(
             'jenis_masukan',
             'tanggal',
-            'sumber_batok',
+            // 'sumber_batok',
             'jenis_briket',
             'stok',
             'keterangan'
@@ -194,23 +197,23 @@ class BriketController extends Controller
         $validator = Validator::make($data, [
             'jenis_masukan' => 'required|string',
             'tanggal' => 'required|date',
-            'sumber_batok' => 'required|string',
+            // 'sumber_batok' => 'required|string',
             'jenis_briket' => 'required|string',
             'stok' => 'required|numeric',
             'keterangan' => 'required|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
         DB::beginTransaction();
 
         try {
-           $briket->update([
+            $briket->update([
                 'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
-                'sumber_batok' => $request->sumber_batok,
+                // 'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
                 'stok' => $request->stok,
                 'keterangan' => $request->keterangan
@@ -222,7 +225,7 @@ class BriketController extends Controller
                 'id' => $briket->id,
                 'jenis_masukan' => $request->jenis_masukan,
                 'tanggal' => $request->tanggal,
-                'sumber_batok' => $request->sumber_batok,
+                // 'sumber_batok' => $request->sumber_batok,
                 'jenis_briket' => $request->jenis_briket,
                 'stok' => $request->stok,
                 'keterangan' => $request->keterangan
@@ -240,46 +243,48 @@ class BriketController extends Controller
     }
 
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $briket = Briket::find($id);
 
-         if (!$briket) {
-             return response()->json(['message' => 'Data not found'], 404);
-         }
+        if (!$briket) {
+            return response()->json(['message' => 'Data not found'], 404);
+        }
 
-         DB::beginTransaction();
-
-         try {
-            $briket->delete();
-
-             DB::commit();
-
-             $statusCode = 200;
-             $message = 'Success';
-             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);;
-         } catch (\Throwable $th) {
-             DB::rollback();
-             return response()->json(['message' => $th->getMessage()], 500);
-         }
-    }
-
-    public function show($id) {
+        DB::beginTransaction();
 
         try {
-           $briket = Briket::find($id);
+            $briket->delete();
+
+            DB::commit();
+
+            $statusCode = 200;
+            $message = 'Success';
+            return response()->json(['status' => $statusCode, 'message' => $message, 'data' => new \stdClass()], $statusCode);;
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+
+        try {
+            $briket = Briket::find($id);
 
             if (!$briket) {
                 return response()->json(['message' => 'Data not found'], 404);
             }
 
-            return response()->json(['data' =>$briket], 200);
+            return response()->json(['data' => $briket], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()], 500);
         }
-
     }
 
-    public function exportBriketData(Request $request){
+    public function exportBriketData(Request $request)
+    {
         try {
             // Dapatkan parameter filter dari request
             $filter = $request->query('filter');
@@ -310,15 +315,15 @@ class BriketController extends Controller
                 }
             }
 
-            $query = Briket::orderBy('sumber_batok')
-            ->orderBy('tanggal', 'desc');
+            $query = Briket::orderBy('jenis_briket')
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
             }
 
             if ($sumberBatok) {
-                $query->where('sumber_batok', 'LIKE', '%' . $sumberBatok . '%');
+                $query->where('jenis_briket', 'LIKE', '%' . $sumberBatok . '%');
             }
 
             $briket = $query->get();
@@ -328,7 +333,7 @@ class BriketController extends Controller
                     'id' => $item->id,
                     'jenis_masukan' => $item->jenis_masukan,
                     'tanggal' => $item->tanggal,
-                    'sumber_batok' => $item->sumber_batok,
+                    // 'sumber_batok' => $item->sumber_batok,
                     'jenis_briket' => $item->jenis_briket,
                     'stok' => $item->stok,
                     'keterangan' => $item->keterangan,
@@ -342,5 +347,4 @@ class BriketController extends Controller
             return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
-
 }

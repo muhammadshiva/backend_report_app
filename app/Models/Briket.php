@@ -11,6 +11,5 @@ class Briket extends Model
 
     protected $table = 'briket';
 
-    protected $fillable = ['jenis_masukan','tanggal','sumber_batok','jenis_briket', 'stok', 'keterangan'];
-
+    protected $fillable = ['jenis_masukan', 'tanggal', 'jenis_briket', 'stok', 'keterangan'];
 }

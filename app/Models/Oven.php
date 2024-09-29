@@ -11,7 +11,6 @@ class Oven extends Model
 
     protected $table = 'oven';
 
-    protected $fillable = ['jenis_masukan', 'tanggal', 'sumber_batok', 'jenis_briket', 'pengovenan', 'pendinginan', 'keterangan'];
-
-
+    // protected $fillable = ['jenis_masukan', 'tanggal', 'sumber_batok', 'jenis_briket', 'pengovenan', 'pendinginan', 'keterangan'];
+    protected $fillable = ['jenis_masukan', 'tanggal', 'jenis_briket', 'pengovenan', 'keterangan'];
 }
