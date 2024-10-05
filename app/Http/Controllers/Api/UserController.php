@@ -52,13 +52,19 @@ class UserController extends Controller
         return response()->json(['data' => $user], 200);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
         try {
-            $user = User::find(auth()->user()->id);
+            // Fetch user by ID
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
 
             $data = $request->only('name', 'username', 'email', 'password', 'profile_picture', 'pin', 'phone', 'position');
 
+            // Check if username is already taken (and it's not the current user's username)
             if ($request->username != $user->username) {
                 $isExistUsername = User::where('username', $request->username)->exists();
 
@@ -67,6 +73,7 @@ class UserController extends Controller
                 }
             }
 
+            // Check if email is already taken (and it's not the current user's email)
             if ($request->email != $user->email) {
                 $isExistEmail = User::where('email', $request->email)->exists();
 
@@ -75,23 +82,28 @@ class UserController extends Controller
                 }
             }
 
+            // Hash the password if provided
             if ($request->password) {
                 $data['password'] = bcrypt($request->password);
             }
 
+            // Handle profile picture upload if provided
             if ($request->profile_picture) {
                 $profilePicture = uploadBase64Image($request->profile_picture);
                 $data['profile_picture'] = $profilePicture;
 
-                if ($user->profile_picure) {
+                // Delete the old profile picture if it exists
+                if ($user->profile_picture) {
                     Storage::delete('public/' . $user->profile_picture);
                 }
             }
 
+            // Update the user data
             $user->update($data);
 
             DB::commit();
 
+            // Response with success message
             $statusCode = 200;
             $message = 'Success';
             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $user], $statusCode);
