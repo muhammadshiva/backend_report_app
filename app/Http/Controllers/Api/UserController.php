@@ -101,14 +101,14 @@ class UserController extends Controller
             // Update the user data
             $user->update($data);
 
-            // DB::commit();
+            DB::commit();
 
             // Response with success message
             $statusCode = 200;
             $message = 'Success';
             return response()->json(['status' => $statusCode, 'message' => $message, 'data' => $user], $statusCode);
         } catch (\Throwable $th) {
-            // DB::rollback();
+            DB::rollback();
             $statusCode = 500;
             $message = 'Internal server error';
             return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
