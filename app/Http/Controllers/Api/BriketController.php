@@ -290,7 +290,7 @@ class BriketController extends Controller
             $filter = $request->query('filter');
 
             $startDate = null;
-            $sumberBatok = null;
+            $jenisBriket = null;
 
             if ($filter) {
                 $filters = explode(',', $filter);
@@ -310,7 +310,7 @@ class BriketController extends Controller
                                 break;
                         }
                     } else {
-                        $sumberBatok = $f;
+                        $jenisBriket = $f;
                     }
                 }
             }
@@ -322,8 +322,8 @@ class BriketController extends Controller
                 $query->where('tanggal', '>=', $startDate);
             }
 
-            if ($sumberBatok) {
-                $query->where('jenis_briket', 'LIKE', '%' . $sumberBatok . '%');
+            if ($jenisBriket) {
+                $query->where('jenis_briket', 'LIKE', '%' . $jenisBriket . '%');
             }
 
             $briket = $query->get();

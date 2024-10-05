@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('briket', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
+            // $table->string('sumber_batok');
             $table->string('jenis_masukan');
             $table->date('tanggal');
-            $table->string('sumber_batok');
             $table->string('jenis_briket');
             $table->double('stok');
             $table->string('keterangan')->nullable();

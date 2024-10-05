@@ -155,14 +155,14 @@ class AuthController extends Controller
         $response = [];
 
         foreach ($tables as $index => $table) {
-            $count = DB::table($table)->count('sumber_batok');
+            $count = DB::table($table)->count('id');
             $latestDate = DB::table($table)->orderBy('tanggal', 'desc')->value('tanggal');
 
             $response[] = [
                 'id' => $index + 1,
                 'title' => $table,
                 'date_created' => $latestDate,
-                'total' => $count
+                'total' => $count,
             ];
         }
 

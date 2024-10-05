@@ -318,7 +318,7 @@ class OvenController extends Controller
             $filter = $request->query('filter');
 
             $startDate = null;
-            $sumberBatok = null;
+            $jenisMasukan = null;
 
             if ($filter) {
                 $filters = explode(',', $filter);
@@ -338,7 +338,7 @@ class OvenController extends Controller
                                 break;
                         }
                     } else {
-                        $sumberBatok = $f;
+                        $jenisMasukan = $f;
                     }
                 }
             }
@@ -350,8 +350,8 @@ class OvenController extends Controller
                 $query->where('tanggal', '>=', $startDate);
             }
 
-            if ($sumberBatok) {
-                $query->where('jenis_masukan', 'LIKE', '%' . $sumberBatok . '%');
+            if ($jenisMasukan) {
+                $query->where('jenis_masukan', 'LIKE', '%' . $jenisMasukan . '%');
             }
 
             $oven = $query->get();

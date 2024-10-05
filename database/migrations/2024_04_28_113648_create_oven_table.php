@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             // $table->foreignId('id_batok')->constrained('batok')->onDelete('cascade');
             // $table->foreignId('id_briket')->constrained('briket')->onDelete('cascade');
+            // $table->double('pendinginan');
+            // $table->string('sumber_batok');
             $table->string('jenis_masukan');
             $table->date('tanggal');
-            $table->string('sumber_batok');
             $table->string('jenis_briket');
             $table->double('pengovenan');
-            $table->double('pendinginan');
             $table->string('keterangan')->nullable();
             $table->timestamps();
         });
