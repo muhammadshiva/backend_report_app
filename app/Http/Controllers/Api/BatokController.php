@@ -17,7 +17,8 @@ use Carbon\Carbon;
 class BatokController extends Controller
 {
 
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         try {
             // Dapatkan parameter filter dari request
             $filter = $request->query('filter');
@@ -50,7 +51,7 @@ class BatokController extends Controller
 
             // Ambil data batok berdasarkan tanggal yang difilter
             $query = Batok::orderBy('sumber_batok')
-                          ->orderBy('tanggal', 'desc');
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
@@ -84,12 +85,12 @@ class BatokController extends Controller
 
             $listPersentase = [
                 [
-                    'jenis_persentase' => 'Masuk',
-                    'persentase' => $persentaseBatokMasuk,
+                    'jenis_persentase' => 'Batok Masuk',
+                    'persentase' => $jumlahBatokMasuk,
                 ],
                 [
-                    'jenis_persentase' => 'Keluar',
-                    'persentase' => $persentaseBatokKeluar,
+                    'jenis_persentase' => 'Batok Keluar',
+                    'persentase' => $jumlahBatokKeluar,
                 ]
             ];
 
@@ -110,7 +111,7 @@ class BatokController extends Controller
                 'total_data' => $totalData,
                 'tanggal_ditambahkan' => $tanggalDitambahkan,
                 'list_persentase' => $listPersentase,
-                'list_sumber_batok'=> $sumberBatokList,
+                'list_sumber_batok' => $sumberBatokList,
                 'list_batok' => $batok,
             ];
 
@@ -166,7 +167,8 @@ class BatokController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
 
         $data = $request->only('jenis_masukan', 'tanggal', 'sumber_batok', 'jumlah_batok', 'keterangan');
 
@@ -178,7 +180,7 @@ class BatokController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
@@ -216,7 +218,8 @@ class BatokController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $data = $request->only('jenis_masukan', 'tanggal', 'sumber_batok', 'jumlah_batok', 'keterangan');
 
         $validator = Validator::make($data, [
@@ -227,7 +230,7 @@ class BatokController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
@@ -266,7 +269,8 @@ class BatokController extends Controller
         }
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         DB::beginTransaction();
 
         try {
@@ -285,11 +289,12 @@ class BatokController extends Controller
         }
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         try {
             $batok = Batok::find($id);
 
-            if(!$batok){
+            if (!$batok) {
                 return response()->json(['message' => 'Data not found'], 404);
             }
 
@@ -299,7 +304,8 @@ class BatokController extends Controller
         }
     }
 
-    public function exportBatokData(Request $request){
+    public function exportBatokData(Request $request)
+    {
         try {
             // Dapatkan parameter filter dari request
             $filter = $request->query('filter');
@@ -331,7 +337,7 @@ class BatokController extends Controller
             }
 
             $query = Batok::orderBy('sumber_batok')
-            ->orderBy('tanggal', 'desc');
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
