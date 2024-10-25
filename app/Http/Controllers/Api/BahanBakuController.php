@@ -17,7 +17,8 @@ use Carbon\Carbon;
 
 class BahanBakuController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         try {
             // Dapatkan parameter filter_by dari request
             $filter = $request->query('filter');
@@ -50,7 +51,7 @@ class BahanBakuController extends Controller
 
             // Ambil data bahan baku berdasarkan tanggal yang difilter
             $query = BahanBaku::orderBy('sumber_batok')
-                          ->orderBy('tanggal', 'desc');
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
@@ -125,8 +126,12 @@ class BahanBakuController extends Controller
 
             $listPersentase = [
                 [
-                    "jenis_persentase" => "Stok Aci",
-                    'persentase' => $persentaseAciMasuk,
+                    "jenis_persentase" => "Stok Aci Masuk",
+                    'persentase' => $jumlahAciMasuk,
+                ],
+                [
+                    "jenis_persentase" => "Stok Aci Keluar",
+                    'persentase' => $jumlahAciKeluar,
                 ],
                 [
                     "jenis_persentase" => "Stok Arang",
@@ -151,7 +156,7 @@ class BahanBakuController extends Controller
                 'total_data' => $totalData,
                 'tanggal_ditambahkan' => $tanggalDitambahkan,
                 'list_persentase' => $listPersentase,
-                'list_sumber_batok'=> $sumberBatokList,
+                'list_sumber_batok' => $sumberBatokList,
                 'list_bahan_baku' => $bahanBaku,
             ];
 
@@ -165,7 +170,8 @@ class BahanBakuController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $data = $request->only(
             'jenis_masukan',
             'tanggal',
@@ -184,7 +190,7 @@ class BahanBakuController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json(['errors' => $validator->messages()], 400);
         }
 
@@ -224,14 +230,16 @@ class BahanBakuController extends Controller
         }
     }
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $data = $request->only(
             'jenis_masukan',
             'tanggal',
             'sumber_batok',
             'bahan_baku',
             'jumlah',
-            'keteragan');
+            'keteragan'
+        );
 
         $validator = Validator::make($data, [
             'jenis_masukan' => 'required|string',
@@ -285,7 +293,8 @@ class BahanBakuController extends Controller
         }
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $bahanBaku = BahanBaku::find($id);
 
         if (!$bahanBaku) {
@@ -308,11 +317,12 @@ class BahanBakuController extends Controller
         }
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         try {
             $bahanBaku = BahanBaku::find($id);
 
-            if(!$bahanBaku){
+            if (!$bahanBaku) {
                 return response()->json(['message' => 'Data not found'], 404);
             }
 
@@ -322,7 +332,8 @@ class BahanBakuController extends Controller
         }
     }
 
-    public function exportBahanBakuData(Request $request){
+    public function exportBahanBakuData(Request $request)
+    {
         try {
             // Dapatkan parameter filter dari request
             $filter = $request->query('filter');
@@ -354,7 +365,7 @@ class BahanBakuController extends Controller
             }
 
             $query = BahanBaku::orderBy('sumber_batok')
-            ->orderBy('tanggal', 'desc');
+                ->orderBy('tanggal', 'desc');
 
             if ($startDate) {
                 $query->where('tanggal', '>=', $startDate);
@@ -384,5 +395,4 @@ class BahanBakuController extends Controller
             return response()->json(['status' => $statusCode, 'message' => $message, 'error' => $th->getMessage()], $statusCode);
         }
     }
-
 }
