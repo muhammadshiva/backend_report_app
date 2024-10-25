@@ -134,12 +134,20 @@ class BahanBakuController extends Controller
                     'persentase' => $jumlahAciKeluar,
                 ],
                 [
-                    "jenis_persentase" => "Stok Arang",
-                    'persentase' => $persentaseArangMasuk,
+                    "jenis_persentase" => "Stok Arang Masuk",
+                    'persentase' => $jumlahArangMasuk,
                 ],
                 [
-                    "jenis_persentase" => "Stok Cairan",
-                    'persentase' => $persentaseCairanMasuk,
+                    "jenis_persentase" => "Stok Arang Keluar",
+                    'persentase' => $jumlahArangKeluar,
+                ],
+                [
+                    "jenis_persentase" => "Stok Cairan Masuk",
+                    'persentase' => $jumlahCairanMasuk,
+                ],
+                [
+                    "jenis_persentase" => "Stok Cairan Keluar",
+                    'persentase' => $jumlahCairanKeluar,
                 ],
                 //* BACKUP
                 // 'persentase_arang_masuk' => $persentaseArangMasuk,
